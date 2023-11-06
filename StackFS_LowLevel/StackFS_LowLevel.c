@@ -572,10 +572,10 @@ static void stackfs_ll_lookup(fuse_req_t req, fuse_ino_t parent,
 	e.attr_timeout = attr_val;
 	e.entry_timeout = 1.0; /* dentry timeout */
 
-	generate_start_time(req);
+	// generate_start_time(req);
 	res = stat(fullPath, &e.attr);
-	generate_end_time(req);
-	populate_time(req);
+	// generate_end_time(req);
+	// populate_time(req);
 
 	if (res == 0) {
 		struct lo_inode *inode;
@@ -610,10 +610,10 @@ static void stackfs_ll_getattr(fuse_req_t req, fuse_ino_t ino,
 	//StackFS_trace("Getattr called on name : %s and inode : %llu",
 	//			lo_name(req, ino), lo_inode(req, ino)->ino);
 	attr_val = lo_attr_valid_time(req);
-	generate_start_time(req);
+	// generate_start_time(req);
 	res = stat(lo_name(req, ino), &buf);
-	generate_end_time(req);
-	populate_time(req);
+	// generate_end_time(req);
+	// populate_time(req);
 	if (res == -1)
 		return (void) fuse_reply_err(req, errno);
 
@@ -631,13 +631,13 @@ static void stackfs_ll_setattr(fuse_req_t req, fuse_ino_t ino,
 	//StackFS_trace("Setattr called on name : %s and inode : %llu",
 	//			lo_name(req, ino), lo_inode(req, ino)->ino);
 	attr_val = lo_attr_valid_time(req);
-	generate_start_time(req);
+	// generate_start_time(req);
 	if (to_set & FUSE_SET_ATTR_SIZE) {
 		/*Truncate*/
 		res = truncate(lo_name(req, ino), attr->st_size);
 		if (res != 0) {
-			generate_end_time(req);
-			populate_time(req);
+			// generate_end_time(req);
+			// populate_time(req);
 			return (void) fuse_reply_err(req, errno);
 		}
 	}
@@ -650,16 +650,16 @@ static void stackfs_ll_setattr(fuse_req_t req, fuse_ino_t ino,
 		tv.modtime = attr->st_mtime;
 		res = utime(lo_name(req, ino), &tv);
 		if (res != 0) {
-			generate_end_time(req);
-			populate_time(req);
+			// generate_end_time(req);
+			// populate_time(req);
 			return (void) fuse_reply_err(req, errno);
 		}
 	}
 
 	memset(&buf, 0, sizeof(buf));
 	res = stat(lo_name(req, ino), &buf);
-	generate_end_time(req);
-	populate_time(req);
+	// generate_end_time(req);
+	// populate_time(req);
 	if (res != 0)
 		return (void) fuse_reply_err(req, errno);
 
@@ -681,15 +681,15 @@ static void stackfs_ll_create(fuse_req_t req, fuse_ino_t parent,
 	construct_full_path(req, parent, fullPath, name);
 	attr_val = lo_attr_valid_time(req);
 
-	generate_start_time(req);
+	// generate_start_time(req);
 
 	fd = creat(fullPath, mode);
 
 	if (fd == -1) {
 		if (fullPath)
 			free(fullPath);
-		generate_end_time(req);
-		populate_time(req);
+		// generate_end_time(req);
+		// populate_time(req);
 		return (void)fuse_reply_err(req, errno);
 	}
 
@@ -699,8 +699,8 @@ static void stackfs_ll_create(fuse_req_t req, fuse_ino_t parent,
 	e.entry_timeout = 1.0;
 
 	res = stat(fullPath, &e.attr);
-	generate_end_time(req);
-	populate_time(req);
+	// generate_end_time(req);
+	// populate_time(req);
 
 	if (res == 0) {
 		/* insert lo_inode into the hash table */
@@ -763,7 +763,7 @@ static void stackfs_ll_mkdir(fuse_req_t req, fuse_ino_t parent,
 	construct_full_path(req, parent, fullPath, name);
 	attr_val = lo_attr_valid_time(req);
 
-	generate_start_time(req);
+	// generate_start_time(req);
 	res = mkdir(fullPath, mode);
 
 	if (res == -1) {
@@ -771,8 +771,8 @@ static void stackfs_ll_mkdir(fuse_req_t req, fuse_ino_t parent,
 		if (fullPath)
 			free(fullPath);
 
-		generate_end_time(req);
-		populate_time(req);
+		// generate_end_time(req);
+		// populate_time(req);
 
 		return (void)fuse_reply_err(req, errno);
 	}
@@ -782,8 +782,8 @@ static void stackfs_ll_mkdir(fuse_req_t req, fuse_ino_t parent,
 	e.attr_timeout = attr_val;
 	e.entry_timeout = 1.0; /* may be attr_val */
 	res = stat(fullPath, &e.attr);
-	generate_end_time(req);
-	populate_time(req);
+	// generate_end_time(req);
+	// populate_time(req);
 
 	if (res == 0) {
 		/* insert lo_inode into the hash table */
@@ -835,10 +835,10 @@ static void stackfs_ll_open(fuse_req_t req, fuse_ino_t ino,
 {
 	int fd;
 
-	generate_start_time(req);
+	// generate_start_time(req);
 	fd = open(lo_name(req, ino), fi->flags);
-	generate_end_time(req);
-	populate_time(req);
+	// generate_end_time(req);
+	// populate_time(req);
 
 	//StackFS_trace("Open called on name : %s and fuse inode : %llu kernel inode : %llu fd : %d",
 	//		lo_name(req, ino), get_higher_fuse_inode_no(req, ino), get_lower_fuse_inode_no(req, ino), fd);
@@ -861,10 +861,10 @@ static void stackfs_ll_opendir(fuse_req_t req, fuse_ino_t ino,
 	//StackFS_trace("Opendir called on name : %s and inode : %llu",
 	//			lo_name(req, ino), lo_inode(req, ino)->ino);
 
-	generate_start_time(req);
+	// generate_start_time(req);
 	dp = opendir(lo_name(req, ino));
-	generate_end_time(req);
-	populate_time(req);
+	// generate_end_time(req);
+	// populate_time(req);
 
 	if (dp == NULL)
 		return (void) fuse_reply_err(req, errno);
@@ -895,12 +895,12 @@ static void stackfs_ll_read(fuse_req_t req, fuse_ino_t ino, size_t size,
 		//StackFS_trace("Splice Read name : %s, off : %lu, size : %zu",
 		//			lo_name(req, ino), offset, size);
 
-		generate_start_time(req);
+		// generate_start_time(req);
 		buf.buf[0].flags = FUSE_BUF_IS_FD | FUSE_BUF_FD_SEEK;
 		buf.buf[0].fd = fi->fh;
 		buf.buf[0].pos = offset;
-		generate_end_time(req);
-		populate_time(req);
+		// generate_end_time(req);
+		// populate_time(req);
 		fuse_reply_data(req, &buf, FUSE_BUF_SPLICE_MOVE);
 	} else {
 		char *buf;
@@ -908,12 +908,12 @@ static void stackfs_ll_read(fuse_req_t req, fuse_ino_t ino, size_t size,
 		//StackFS_trace("Read on name : %s, Kernel inode : %llu, fuse inode : %llu, off : %lu, size : %zu",
 		//			lo_name(req, ino), get_lower_fuse_inode_no(req, ino), get_higher_fuse_inode_no(req, ino), offset, size);
 		buf = (char *)malloc(size);
-		generate_start_time(req);
+		// generate_start_time(req);
 		//clock_gettime(CLOCK_MONOTONIC, &start);
 		res = pread(fi->fh, buf, size, offset);
 		//clock_gettime(CLOCK_MONOTONIC, &end);
-		generate_end_time(req);
-		populate_time(req);
+		// generate_end_time(req);
+		// populate_time(req);
 		//time_sec = end.tv_sec - start.tv_sec;
 		//time = end.tv_nsec - start.tv_nsec;
 		//time_sec *= 1000000000;
@@ -944,7 +944,7 @@ static void stackfs_ll_readdir(fuse_req_t req, fuse_ino_t ino, size_t size,
 	if (!buf)
 		return (void) fuse_reply_err(req, ENOMEM);
 
-	generate_start_time(req);
+	// generate_start_time(req);
 	/* If offset is not same, need to seek it */
 	if (off != d->offset) {
 		seekdir(d->dp, off);
@@ -990,16 +990,16 @@ static void stackfs_ll_readdir(fuse_req_t req, fuse_ino_t ino, size_t size,
 		d->offset = nextoff;
 	}
 
-	generate_end_time(req);
-	populate_time(req);
+	// generate_end_time(req);
+	// populate_time(req);
 	fuse_reply_buf(req, buf, size - rem);
 	free(buf);
 
 	return;
 
 error:
-	generate_end_time(req);
-	populate_time(req);
+	// generate_end_time(req);
+	// populate_time(req);
 	free(buf);
 
 	fuse_reply_err(req, err);
@@ -1012,10 +1012,10 @@ static void stackfs_ll_release(fuse_req_t req, fuse_ino_t ino,
 
 	//StackFS_trace("Release called on name : %s and inode : %llu fd : %d ",
 	//		lo_name(req, ino), lo_inode(req, ino)->ino, fi->fh);
-	generate_start_time(req);
+	// generate_start_time(req);
 	close(fi->fh);
-	generate_end_time(req);
-	populate_time(req);
+	// generate_end_time(req);
+	// populate_time(req);
 
 	fuse_reply_err(req, 0);
 }
@@ -1029,10 +1029,10 @@ static void stackfs_ll_releasedir(fuse_req_t req, fuse_ino_t ino,
 	//StackFS_trace("Releasedir called on name : %s and inode : %llu",
 	//			lo_name(req, ino), lo_inode(req, ino)->ino);
 	d = lo_dirptr(fi);
-	generate_start_time(req);
+	// generate_start_time(req);
 	closedir(d->dp);
-	generate_end_time(req);
-	populate_time(req);
+	// generate_end_time(req);
+	// populate_time(req);
 	free(d);
 	fuse_reply_err(req, 0);
 }
@@ -1045,10 +1045,10 @@ static void stackfs_ll_write(fuse_req_t req, fuse_ino_t ino, const char *buf,
 
 	//StackFS_trace("Write name : %s, inode : %llu, off : %lu, size : %zu",
 	//		lo_name(req, ino), lo_inode(req, ino)->ino, off, size);
-	generate_start_time(req);
+	// generate_start_time(req);
 	res = pwrite(fi->fh, buf, size, off);
-	generate_end_time(req);
-	populate_time(req);
+	// generate_end_time(req);
+	// populate_time(req);
 
 	if (res == -1)
 		return (void) fuse_reply_err(req, errno);
@@ -1068,13 +1068,13 @@ static void stackfs_ll_write_buf(fuse_req_t req, fuse_ino_t ino,
 	//StackFS_trace("Splice Write_buf on name : %s, off : %lu, size : %zu",
 	//			lo_name(req, ino), off, buf->buf[0].size);
 
-	generate_start_time(req);
+	// generate_start_time(req);
 	dst.buf[0].flags = FUSE_BUF_IS_FD | FUSE_BUF_FD_SEEK;
 	dst.buf[0].fd = fi->fh;
 	dst.buf[0].pos = off;
 	res = fuse_buf_copy(&dst, buf, FUSE_BUF_SPLICE_NONBLOCK);
-	generate_end_time(req);
-	populate_time(req);
+	// generate_end_time(req);
+	// populate_time(req);
 	if (res >= 0)
 		fuse_reply_write(req, res);
 	else
@@ -1092,10 +1092,10 @@ static void stackfs_ll_unlink(fuse_req_t req, fuse_ino_t parent,
 	//				name, lo_inode(req, parent)->ino);
 	fullPath = (char *)malloc(PATH_MAX);
 	construct_full_path(req, parent, fullPath, name);
-	generate_start_time(req);
+	// generate_start_time(req);
 	res = unlink(fullPath);
-	generate_end_time(req);
-	populate_time(req);
+	// generate_end_time(req);
+	// populate_time(req);
 	if (res == -1)
 		fuse_reply_err(req, errno);
 	else
@@ -1115,10 +1115,10 @@ static void stackfs_ll_rmdir(fuse_req_t req, fuse_ino_t parent,
 	//				name, lo_inode(req, parent)->ino);
 	fullPath = (char *)malloc(PATH_MAX);
 	construct_full_path(req, parent, fullPath, name);
-	generate_start_time(req);
+	// generate_start_time(req);
 	res = rmdir(fullPath);
-	generate_end_time(req);
-	populate_time(req);
+	// generate_end_time(req);
+	// populate_time(req);
 
 	if (res == -1)
 		fuse_reply_err(req, errno);
@@ -1147,12 +1147,12 @@ static void stackfs_ll_forget(fuse_req_t req, fuse_ino_t ino, uint64_t nlookup)
 {
 	struct lo_inode *inode = lo_inode(req, ino);
 
-	generate_start_time(req);
+	// generate_start_time(req);
 	//StackFS_trace("Forget name : %s, inode : %llu and lookup count : %llu",
 	//				inode->name, inode->ino, nlookup);
 	forget_inode(req, inode, nlookup);
-	generate_end_time(req);
-	populate_time(req);
+	// generate_end_time(req);
+	// populate_time(req);
 
 	fuse_reply_none(req);
 }
@@ -1165,7 +1165,7 @@ static void stackfs_ll_forget_multi(fuse_req_t req, size_t count,
 	fuse_ino_t ino;
 	uint64_t nlookup;
 
-	generate_start_time(req);
+	// generate_start_time(req);
 	//StackFS_trace("Batch Forget count : %zu", count);
 	for (i = 0; i < count; i++) {
 		ino = forgets[i].ino;
@@ -1176,8 +1176,8 @@ static void stackfs_ll_forget_multi(fuse_req_t req, size_t count,
 		//				i, inode->name, nlookup);
 		forget_inode(req, inode, nlookup);
 	}
-	generate_end_time(req);
-	populate_time(req);
+	// generate_end_time(req);
+	// populate_time(req);
 
 	fuse_reply_none(req);
 }
@@ -1189,10 +1189,10 @@ static void stackfs_ll_flush(fuse_req_t req, fuse_ino_t ino,
 
 	//StackFS_trace("Flush called on name : %s and inode : %llu",
 	//			lo_name(req, ino), lo_inode(req, ino)->ino);
-	generate_start_time(req);
+	// generate_start_time(req);
 	err = 0;
-	generate_end_time(req);
-	populate_time(req);
+	// generate_end_time(req);
+	// populate_time(req);
 	fuse_reply_err(req, err);
 }
 
@@ -1205,10 +1205,10 @@ static void stackfs_ll_statfs(fuse_req_t req, fuse_ino_t ino)
 		//StackFS_trace("Statfs called with name : %s, and inode : %llu",
 		//		lo_name(req, ino), lo_inode(req, ino)->ino);
 		memset(&buf, 0, sizeof(buf));
-		generate_start_time(req);
+		// generate_start_time(req);
 		res = statvfs(lo_name(req, ino), &buf);
-		generate_end_time(req);
-		populate_time(req);
+		// generate_end_time(req);
+		// populate_time(req);
 	}
 
 	if (!res)
@@ -1224,13 +1224,13 @@ static void stackfs_ll_fsync(fuse_req_t req, fuse_ino_t ino, int datasync,
 
 	//StackFS_trace("Fsync on name : %s, inode : %llu, datasync : %d",
 	//	 lo_name(req, ino), lo_inode(req, ino)->ino, datasync);
-	generate_start_time(req);
+	// generate_start_time(req);
 	if (datasync)
 		res = fdatasync(fi->fh);
 	else
 		res = fsync(fi->fh);
-	generate_end_time(req);
-	populate_time(req);
+	// generate_end_time(req);
+	// populate_time(req);
 
 	fuse_reply_err(req, res);
 }
@@ -1245,10 +1245,10 @@ static void stackfs_ll_getxattr(fuse_req_t req, fuse_ino_t ino,
 	if (size) {
 		char *value = (char *) malloc(size);
 
-		generate_start_time(req);
+		// generate_start_time(req);
 		res = lgetxattr(lo_name(req, ino), name, value, size);
-		generate_end_time(req);
-		populate_time(req);
+		// generate_end_time(req);
+		// populate_time(req);
 		if (res > 0)
 			fuse_reply_buf(req, value, res);
 		else
@@ -1256,10 +1256,10 @@ static void stackfs_ll_getxattr(fuse_req_t req, fuse_ino_t ino,
 
 		free(value);
 	} else {
-		generate_start_time(req);
+		// generate_start_time(req);
 		res = lgetxattr(lo_name(req, ino), name, NULL, 0);
-		generate_end_time(req);
-		populate_time(req);
+		// generate_end_time(req);
+		// populate_time(req);
 		if (res >= 0)
 			fuse_reply_xattr(req, res);
 		else
