@@ -1,6 +1,6 @@
 ## Sources ##
 
-Code:
+Code: 
 https://github.com/sbu-fsl/fuse-stackfs/tree/master
 https://github.com/libfuse/libfuse
 
@@ -23,7 +23,6 @@ the macro `FUSE_USE_VERSION` to be 30. Peering into the Libfuse library (see
 affects the interface of certain functions that it expects to be defined. It 
 looks like we should change `FUSE_USE_VERSION` to be 314.
 
-Note: 
 See https://www.fsl.cs.sunysb.edu/docs/fuse/fuse-tos19-a15-vangoor.pdf for the long
 form version of the FUSE or Not to FUSE paper. In this report, they say that they
 use libfuse commit #386b1b.
@@ -63,37 +62,37 @@ on the partition (i.e. directly on a block device). Instead, we'll create a
 filesystem within a file, mount the filesystem somewhere, and use it as the underlying 
 filesystem. 
 
-To do this:
-    1. Create the file for the filesystem: `touch ~/fs/ext4_fs`
-    2. Format the file so it is an ext4 filesystem: `mke2fs -t ext4 ~/fs/ext4_fs 2048`
-    3. Mount the filesystem at some mountpoint: `sudo mount -t ext4 ~/fs/ext4_fs ~/fs/mountpoint`
-    4. Change the directory permissions: `sudo chmod -R 777 ~/fs/mountpoint/`
+   To do this:
+   1. Create the file for the filesystem: `touch ~/fs/ext4_fs`
+   2. Format the file so it is an ext4 filesystem: `mke2fs -t ext4 ~/fs/ext4_fs 2048`
+   3. Mount the filesystem at some mountpoint: `sudo mount -t ext4 ~/fs/ext4_fs ~/fs/mountpoint`
+   4. Change the directory permissions: `sudo chmod -R 777 ~/fs/mountpoint/`
 
-When you're done, clean up with:
-```
-sudo umount ~/fs/mountpoint
-rmdir ~/fs/mountpoint
-rm ~/fs/ext4_fs
-```
+   When you're done, clean up with:
+   ```
+   sudo umount ~/fs/mountpoint
+   rmdir ~/fs/mountpoint
+   rm ~/fs/ext4_fs
+   ```
 
 2. Now build the stacked filesystem binary and run the filesystem daemon.
 
-To run the filesystem daemon with a single thread and in foreground mode, use: 
-`./StackFS_ll -r ~/fs/mountpoint ~/userspace_mountpoint -s -f`
+   To run the filesystem daemon with a single thread and in foreground mode, use: 
+   `./StackFS_ll -r ~/fs/mountpoint ~/userspace_mountpoint -s -f`
 
-This command will not return. To kill it, send an interrupt signal via `Ctrl-C`.
-Right now this appears to cause a segfault in the signal handler, this may need
-to be fixed. 
-** Once you have killed the daemon, it's necessary to run `fusermount3 -u ~/userspace_mountpoint` 
-to unmount the userspace file system. this will cause all the content of the 
-userspace filesystem to be erased. **
+   This command will not return. To kill it, send an interrupt signal via `Ctrl-C`.
+   Right now this appears to cause a segfault in the signal handler, this may need
+   to be fixed. 
+   ** Once you have killed the daemon, it's necessary to run `fusermount3 -u ~/userspace_mountpoint` 
+   to unmount the userspace file system. this will cause all the content of the 
+   userspace filesystem to be erased. **
 
 3. You can interact with the userspace filesystem normally:
-```
-touch ~/userspace_mountpoint hello.txt
-echo "hello" > ~/userspace_mountpoint/hello.txt
-rm ~/userspace_mountpoint/hello.txt
-```
+   ```
+   touch ~/userspace_mountpoint hello.txt
+   echo "hello" > ~/userspace_mountpoint/hello.txt
+   rm ~/userspace_mountpoint/hello.txt
+   ```
 
 4. ....TODO
 
