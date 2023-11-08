@@ -83,9 +83,9 @@ filesystem.
    This command will not return. To kill it, send an interrupt signal via `Ctrl-C`.
    Right now this appears to cause a segfault in the signal handler, this may need
    to be fixed. 
-   ** Once you have killed the daemon, it's necessary to run `fusermount3 -u ~/userspace_mountpoint` 
+   **Once you have killed the daemon, it's necessary to run `fusermount3 -u ~/userspace_mountpoint` 
    to unmount the userspace file system. this will cause all the content of the 
-   userspace filesystem to be erased. **
+   userspace filesystem to be erased.**
 
 3. You can interact with the userspace filesystem normally:
    ```
