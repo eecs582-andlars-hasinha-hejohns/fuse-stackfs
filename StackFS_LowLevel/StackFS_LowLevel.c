@@ -12,7 +12,7 @@
  * published by the Free Software Foundation.
  */
 
-#define FUSE_USE_VERSION 30
+#define FUSE_USE_VERSION 314
 #define _XOPEN_SOURCE 500
 #define _GNU_SOURCE
 #include <stdarg.h>
@@ -66,11 +66,10 @@ int log_open(char *statsDir)
 	char *trace_path = NULL;
 
 	if (statsDir) {
-		trace_path = (char *)malloc(strlen(statsDir) +
-				TRACE_FILE_LEN + 1);
+		trace_path = (char *)malloc(strlen(statsDir) + TRACE_FILE_LEN + 1);
 		memset(trace_path, 0, strlen(statsDir) + TRACE_FILE_LEN + 1);
 		strncpy(trace_path, statsDir, strlen(statsDir));
-		strncat(trace_path, TRACE_FILE, TRACE_FILE_LEN);
+		strcat(trace_path, TRACE_FILE);
 	} else {
 		trace_path = (char *)malloc(TRACE_FILE_LEN);
 		memset(trace_path, 0, TRACE_FILE_LEN);
@@ -298,7 +297,7 @@ static void construct_full_path(fuse_req_t req, fuse_ino_t ino,
 				char *fpath, const char *path)
 {
 	strcpy(fpath, lo_name(req, ino));
-	strncat(fpath, "/", 1);
+	strcat(fpath, "/");
 	strncat(fpath, path, PATH_MAX);
 }
 
@@ -1344,9 +1343,9 @@ int main(int argc, char **argv)
 	char *statsDir = NULL;
 	char *resolved_statsDir = NULL;
 	char *resolved_rootdir_path = NULL;
-	int multithreaded;
 
 	struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
+
 	/*Default attr valid time is 1 sec*/
 	struct stackFS_info s_info = {NULL, NULL, 1.0, 0, 0};
 
@@ -1416,53 +1415,51 @@ int main(int argc, char **argv)
 		goto out2;
 	}
 
-	struct fuse_chan *ch;
-	char *mountpoint;
-
-	res = fuse_parse_cmdline(&args, &mountpoint, &multithreaded, NULL);
+    struct fuse_cmdline_opts opts;
+    res = fuse_parse_cmdline(&args, &opts);
 
 	/* Initialise the spinlock before the logfile creation */
 	pthread_spin_init(&spinlock, 0);
 
 	if (s_info.tracing) {
 		err = log_open(resolved_statsDir);
-		if (err)
-			printf("No log file created(but not a fatle error, ");
-			printf("so proceeding)\n");
-	} else
+		if (err) {
+			printf("No log file created (but not a fatal error, so proceeding)\n");
+        }
+	} else {
 		printf("No tracing\n");
+    }
 
-	printf("Multi Threaded : %d\n", multithreaded);
+	printf("Single Threaded : %d\n", opts.singlethread);
 
 	if (res != -1) {
-		ch = fuse_mount(mountpoint, &args);
-		if (ch) {
-			struct fuse_session *se;
+		struct fuse_session *se = fuse_session_new(&args, &hello_ll_oper, sizeof(hello_ll_oper), lo);
+		fuse_set_signal_handlers(se);
+        fuse_session_mount(se, opts.mountpoint);
 
-			printf("Mounted Successfully\n");
-			se = fuse_lowlevel_new(&args, &hello_ll_oper,
-						sizeof(hello_ll_oper), lo);
-			if (se) {
-				if (fuse_set_signal_handlers(se) != -1) {
-					fuse_session_add_chan(se, ch);
-					if (resolved_statsDir)
-						fuse_session_add_statsDir(se,
-							resolved_statsDir);
-					if (multithreaded)
-						err = fuse_session_loop_mt(se);
-					else
-						err = fuse_session_loop(se);
-					(void) err;
+        // TODO: UNSURE ABOUT THIS 
+        /*
+		if (resolved_statsDir)
+			fuse_session_add_statsDir(se, resolved_statsDir);
+        */
 
-					fuse_remove_signal_handlers(se);
-					fuse_session_remove_statsDir(se);
-					fuse_session_remove_chan(ch);
-				}
-				fuse_session_destroy(se);
-			}
-			StackFS_trace("Function Trace : Unmount");
-			fuse_unmount(mountpoint, ch);
-		}
+		if (!opts.singlethread) {
+            struct fuse_loop_config *lc = fuse_loop_cfg_create(); 
+			fuse_session_loop_mt(se, lc);
+            fuse_loop_cfg_destroy(lc);
+        } else {
+			fuse_session_loop(se);
+        }
+
+		fuse_remove_signal_handlers(se);
+
+        // TODO: UNSURE ABOUT THIS
+		// fuse_session_remove_statsDir(se);
+
+		fuse_session_destroy(se);
+
+		StackFS_trace("Function Trace : Unmount");
+        fuse_session_unmount(se);
 	}
 
 	/* free the arguments */
