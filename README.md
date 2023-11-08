@@ -39,3 +39,12 @@ repo (https://github.com/libfuse/libfuse/tree/fuse-3.14.0).
 
 ## Building and Running the Stacked Filesystem ##
 
+TODO:
+- Need to study the logging mechanisms in the stacked filesystem. I have commented
+out the fuse_session_add_statsDir() stuff to get things building for now.
+- Need to figure out what the generate_time(), populate_time(), etc. are doing.
+- Need to figure out what the "rootDir" is and why it must be passed as an argument
+to the user space file implementation binary.
+
+How To Use:
+1. 
