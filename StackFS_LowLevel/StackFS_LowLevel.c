@@ -49,6 +49,8 @@ char banner[4096];
 
 void print_usage(void)
 {
+    printf("\n");
+    printf("The StackedFS options include: \n");
 	printf("USAGE	: ./StackFS_ll -r <rootDir>|-rootdir=<rootDir> ");
 	printf("[--attrval=<time(secs)>] [--statsdir=<statsDirPath>] ");
 	printf("<mountDir> [FUSE options]\n"); /* For checkPatch.pl */
@@ -59,6 +61,10 @@ void print_usage(void)
 	printf("<mountDir> : Mount Directory on to which the F/S should be ");
 	printf("mounted\n"); /* For checkPatch.pl */
 	printf("Example    : ./StackFS_ll -r rootDir/ mountDir/\n");
+
+    printf("\n");
+    printf("The generic FUSE options include: \n");
+    fuse_cmdline_help(); 
 }
 
 int log_open(char *statsDir)
