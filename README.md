@@ -1,17 +1,17 @@
 ## Sources ##
 
-Code: 
-https://github.com/sbu-fsl/fuse-stackfs/tree/master
-https://github.com/libfuse/libfuse
+Code:
+- https://github.com/sbu-fsl/fuse-stackfs/tree/master
+- https://github.com/libfuse/libfuse
 
 Documentation:
-https://www.usenix.org/system/files/conference/fast17/fast17-vangoor.pdf
-https://www.fsl.cs.sunysb.edu/docs/fuse/fuse-tos19-a15-vangoor.pdf
-https://www.fsl.cs.stonybrook.edu/docs/fuse/fuse-article-appendices.html
-https://www.filesystems.org/fuse/
-https://github.com/libfuse/libfuse/releases
-https://www.cs.nmsu.edu/~pfeiffer/fuse-tutorial/html/index.html
-https://www.cs.hmc.edu/~geoff/classes/hmc.cs135.201109/homework/fuse/fuse_doc.html
+- https://www.usenix.org/system/files/conference/fast17/fast17-vangoor.pdf
+- https://www.fsl.cs.sunysb.edu/docs/fuse/fuse-tos19-a15-vangoor.pdf
+- https://www.fsl.cs.stonybrook.edu/docs/fuse/fuse-article-appendices.html
+- https://www.filesystems.org/fuse/
+- https://github.com/libfuse/libfuse/releases
+- https://www.cs.nmsu.edu/~pfeiffer/fuse-tutorial/html/index.html
+- https://www.cs.hmc.edu/~geoff/classes/hmc.cs135.201109/homework/fuse/fuse_doc.html
 
 
 ## Stacked Filesystem History ##
