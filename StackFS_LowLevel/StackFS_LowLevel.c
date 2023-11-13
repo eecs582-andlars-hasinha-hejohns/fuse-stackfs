@@ -12,7 +12,7 @@
  * published by the Free Software Foundation.
  */
 
-#define FUSE_USE_VERSION 314
+#define FUSE_USE_VERSION 316
 #define _XOPEN_SOURCE 500
 #define _GNU_SOURCE
 #include <stdarg.h>

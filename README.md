@@ -21,7 +21,7 @@ level API their filesystem is designed to be compatible with. However, they defi
 the macro `FUSE_USE_VERSION` to be 30. Peering into the Libfuse library (see 
 `include/fuse.h`, `include/fuse_common.h` for examples), we see that this macro
 affects the interface of certain functions that it expects to be defined. It 
-looks like we should change `FUSE_USE_VERSION` to be 314.
+looks like we should change `FUSE_USE_VERSION` to be 316.
 
 See https://www.fsl.cs.sunysb.edu/docs/fuse/fuse-tos19-a15-vangoor.pdf for the long
 form version of the FUSE or Not to FUSE paper. In this report, they say that they
