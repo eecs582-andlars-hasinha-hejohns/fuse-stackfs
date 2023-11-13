@@ -50,20 +50,17 @@ char banner[4096];
 void print_usage(void)
 {
     printf("\n");
-    printf("The StackedFS options include: \n");
+    printf("The StackFS options include: \n");
 	printf("USAGE	: ./StackFS_ll -r <rootDir>|-rootdir=<rootDir> ");
-	printf("[--attrval=<time(secs)>] [--statsdir=<statsDirPath>] ");
-	printf("<mountDir> [FUSE options]\n"); /* For checkPatch.pl */
+	printf("[--attrval=<time(secs)>] [--statsdir=<statsDirPath>] <mountDir> [FUSE options]\n"); /* For checkPatch.pl */
 	printf("<rootDir>  : Root Directory containg the Low Level F/S\n");
-	printf("<attrval>  : Time in secs to let kernel know how muh time ");
-	printf("the attributes are valid\n"); /* For checkPatch.pl */
+	printf("<attrval>  : Time in secs to let kernel know how much time the attributes are valid\n"); /* For checkPatch.pl */
 	printf("<statsDirPath> : Path for copying any statistics details\n");
-	printf("<mountDir> : Mount Directory on to which the F/S should be ");
-	printf("mounted\n"); /* For checkPatch.pl */
+	printf("<mountDir> : Mount Directory on to which the F/S should be mounted\n"); /* For checkPatch.pl */
 	printf("Example    : ./StackFS_ll -r rootDir/ mountDir/\n");
 
     printf("\n");
-    printf("The generic FUSE options include: \n");
+    printf("The generic [FUSE options] include: \n");
     fuse_cmdline_help(); 
 }
 
@@ -1377,8 +1374,7 @@ int main(int argc, char **argv)
 		statsDir = s_info.statsDir;
 		resolved_statsDir = realpath(statsDir, NULL);
 		if (resolved_statsDir == NULL) {
-			printf("There is a problem in resolving the stats ");
-			printf("Directory passed %s\n", statsDir);
+			printf("There is a problem in resolving the stats directory passed %s\n", statsDir);
 			perror("Error");
 			res = -1;
 			goto out1;
@@ -1390,19 +1386,21 @@ int main(int argc, char **argv)
 
 	if (rootDir) {
 		lo = (struct lo_data *) calloc(1, sizeof(struct lo_data));
+
 		if (!lo) {
 			fprintf(stderr, "fuse: memory allocation failed\n");
 			res = -1;
 			goto out2; /* free the resolved_statsDir */
 		}
+
 		resolved_rootdir_path = realpath(rootDir, NULL);
 		if (!resolved_rootdir_path) {
-			printf("There is a problem in resolving the root ");
-			printf("Directory Passed %s\n", rootDir);
+			printf("There is a problem in resolving the root directory Passed %s\n", rootDir);
 			perror("Error");
 			res = -1;
 			goto out3; /* free both resolved_statsDir, lo */
 		}
+
 		if (res == 0) {
 			(lo->root).name = resolved_rootdir_path;
 			(lo->root).ino = FUSE_ROOT_ID;

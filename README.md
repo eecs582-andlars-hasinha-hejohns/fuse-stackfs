@@ -27,6 +27,10 @@ See https://www.fsl.cs.sunysb.edu/docs/fuse/fuse-tos19-a15-vangoor.pdf for the l
 form version of the FUSE or Not to FUSE paper. In this report, they say that they
 use libfuse commit #386b1b.
 
+They also add instrumentation mechanisms to the libfuse library itself. These
+mechanisms are referenced in the StackFS implementation, so they must also be
+brought over to the newer version of libfuse.
+
 
 ## System Details ##
 
@@ -39,7 +43,7 @@ System:
 - Debian v12.2
 - Linux Kernel v6.1.0-13-amd64
 
-We need the stacked filesystem to be compatible with:
+Debian v12.2 comes with:
 - Libfuse v3.14.0-4, the shared library ("apt install libfuse3-3")
 - Fuse3 v3.14.0-4, fuse command line stuff ("apt install fuse3")
 - Libfuse3-dev v3.14.0-4, files for development ("apt install libfuse3-dev")
@@ -50,10 +54,28 @@ via the package manager, the source files for all three are included in the libf
 repo (https://github.com/libfuse/libfuse/tree/fuse-3.14.0).
 
 
+## Using Customized Libfuse ##
+
+1. We want the most up to date version of libfuse and we want libfuse to
+be instrumented in the way that StackFS expects it to be. Clone https://github.com/eecs582-andlars-hasinha-hejohns/libfuse
+and checkout the `with_instrumentation` branch.
+2. We'll now build libfuse as a shared object file so that it can be linked to
+create a StackFS binary executable. To do this, follow the build instructions which
+accompany the customized version of libfuse. At the time of writing this, you should
+`mkdir build; cd build; meson setup ..; ninja`. There is no need to run the tests
+which accompany the libfuse repo.
+3. Check that the `build/` directory you just created contains `/lib/libfuse3.so`.
+
+
 ## Building and Running the Stacked Filesystem ##
 
-Notes:
-- See the help options for the stacked filesystem binary via `./StackFS_ll -h`.
+Building:
+1. Clone https://github.com/eecs582-andlars-hasinha-hejohns/fuse-stackfs and checkout
+the `updating` branch.
+2. Build the StackFS binary by running the makefile in the `StackFS_LowLevel`
+directory. **Right now, there are some hardcoded paths in the makefile. Modify these
+if necessary.**
+3. Checkout the help options for the stacked filesystem binary via `./StackFS_ll -h`.
 
 How To Use:
 1. The stacked filesystem uses an underlying filesystem, such as ext4. For now, we
@@ -83,8 +105,9 @@ filesystem.
    This command will not return. To kill it, send an interrupt signal via `Ctrl-C`.
    Right now this appears to cause a segfault in the signal handler, this may need
    to be fixed. 
+
    **Once you have killed the daemon, it's necessary to run `fusermount3 -u ~/userspace_mountpoint` 
-   to unmount the userspace file system. this will cause all the content of the 
+   to unmount the userspace file system. This will cause all the content of the 
    userspace filesystem to be erased.**
 
 3. You can interact with the userspace filesystem normally:
@@ -104,3 +127,5 @@ filesystem.
 out the fuse_session_add_statsDir() stuff to get things building for now.
 
 - Need to figure out what the generate_time(), populate_time(), etc. are doing.
+
+- Upgrade to Linux 6.6 kernel.
