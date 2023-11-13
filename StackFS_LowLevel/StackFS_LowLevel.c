@@ -76,7 +76,7 @@ int log_open(char *statsDir)
 	} else {
 		trace_path = (char *)malloc(TRACE_FILE_LEN);
 		memset(trace_path, 0, TRACE_FILE_LEN);
-		strncpy(trace_path, TRACE_FILE + 1, TRACE_FILE_LEN-1);
+        strcpy(trace_path, TRACE_FILE + 1);
 	}
 	printf("Trace file location : %s\n", trace_path);
 	logfile = fopen(trace_path, "w");
@@ -92,7 +92,6 @@ int log_open(char *statsDir)
 
 void log_close(void)
 {
-
 	if (logfile)
 		fclose(logfile);
 }
@@ -1200,7 +1199,7 @@ static void stackfs_ll_flush(fuse_req_t req, fuse_ino_t ino,
 
 static void stackfs_ll_statfs(fuse_req_t req, fuse_ino_t ino)
 {
-	int res;
+	int res = 0;
 	struct statvfs buf;
 
 	if (ino) {
@@ -1216,7 +1215,7 @@ static void stackfs_ll_statfs(fuse_req_t req, fuse_ino_t ino)
 	if (!res)
 		fuse_reply_statfs(req, &buf);
 	else
-		fuse_reply_err(req, res);
+		fuse_reply_err(req, -1);
 }
 
 static void stackfs_ll_fsync(fuse_req_t req, fuse_ino_t ino, int datasync,
@@ -1328,14 +1327,14 @@ static int stackfs_process_arg(void *data, const char *arg,
 	(void)arg;
 
 	switch (key) {
-	case 0:
-		s_info->is_help = 1;
-		return 0;
-	case 1:
-		s_info->tracing	= 1;
-		return 0;
-	default:
-		return 1;
+	    case 0:
+	    	s_info->is_help = 1;
+	    	return 0;
+	    case 1:
+	    	s_info->tracing	= 1;
+	    	return 0;
+	    default:
+	    	return 1;
 	}
 }
 
@@ -1365,7 +1364,8 @@ int main(int argc, char **argv)
 	}
 
 	if (!s_info.rootDir) {
-		printf("Root Directory is mandatory\n");
+		printf("Root directory is mandatory!\n");
+        printf("Here is how to use the executable: \n");
 		print_usage();
 		return -1;
 	}
@@ -1395,7 +1395,7 @@ int main(int argc, char **argv)
 
 		resolved_rootdir_path = realpath(rootDir, NULL);
 		if (!resolved_rootdir_path) {
-			printf("There is a problem in resolving the root directory Passed %s\n", rootDir);
+			printf("There is a problem in resolving the passed root directory: %s\n", rootDir);
 			perror("Error");
 			res = -1;
 			goto out3; /* free both resolved_statsDir, lo */

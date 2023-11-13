@@ -244,8 +244,9 @@ int main(int argc, char *argv[])
     /* accept options like -o writeback_cache */
     fuse_conn_info_opts_ptr = fuse_parse_conn_info_opts(&args);
 
-    if (fuse_opt_parse(&args, &memfs_info, memfs_opts, NULL) == -1)
+    if (fuse_opt_parse(&args, &memfs_info, memfs_opts, NULL) == -1) {
         return 1;
+    }
 
 	init_buff();
 

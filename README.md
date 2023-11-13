@@ -65,6 +65,11 @@ accompany the customized version of libfuse. At the time of writing this, you sh
 `mkdir build; cd build; meson setup ..; ninja`. There is no need to run the tests
 which accompany the libfuse repo.
 3. Check that the `build/` directory you just created contains `/lib/libfuse3.so`.
+4. The StackFS binary executable needs access to the `fusermount3` executable. The
+`fusermount3` executable should be located at `build/util/fusermount3`. Add the
+`build/util` directory to `$PATH`. Furthermore, the `fusermount3` executable needs
+special privileges to run since it is does a `mount`. To give it these special
+privileges, use `sudo chmod root:root fusermount3; sudo chmod 4755 fusermount3`.
 
 
 ## Building and Running the Stacked Filesystem ##
@@ -72,9 +77,9 @@ which accompany the libfuse repo.
 Building:
 1. Clone https://github.com/eecs582-andlars-hasinha-hejohns/fuse-stackfs and checkout
 the `updating` branch.
-2. Build the StackFS binary by running the makefile in the `StackFS_LowLevel`
-directory. **Right now, there are some hardcoded paths in the makefile. Modify these
-if necessary.**
+2. Build the StackFS binary by doing `make` in the `StackFS_LowLevel`
+directory. If you want an executable binary with debug symbols, use `make Debug`.
+**Right now, there are some hardcoded paths in the makefile. Modify these if necessary.** 
 3. Checkout the help options for the stacked filesystem binary via `./StackFS_ll -h`.
 
 How To Use:

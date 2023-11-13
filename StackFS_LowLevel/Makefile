@@ -1,10 +1,10 @@
 all: StackFS_ll
 
 StackFS_ll:
-	# gcc -Wall -Werror StackFS_LowLevel.c `pkg-config fuse3 --cflags --libs` -o StackFS_ll
+	gcc -Wall -Werror -I/home/andrew/libfuse/include/ StackFS_LowLevel.c -o StackFS_ll -Wl,-L,/home/andrew/libfuse/build/lib/ -Wl,-l,pthread -Wl,-l,fuse3 -Wl,-rpath=/home/andrew/libfuse/build/lib/
 
-	# Don't use the system libfuse.
-	gcc -Wall -Werror -L/home/andrew/libfuse/build/lib/ -lpthread -I/home/andrew/libfuse/include/ StackFS_LowLevel.c -lfuse3 -o StackFS_ll
+Debug:
+	gcc -ggdb -Og -Wall -Werror -I/home/andrew/libfuse/include/ StackFS_LowLevel.c -o StackFS_ll -Wl,-L,/home/andrew/libfuse/build/lib/ -Wl,-l,pthread -Wl,-l,fuse3 -Wl,-rpath=/home/andrew/libfuse/build/lib/
 
 clean:
 	rm -rf StackFS_ll
