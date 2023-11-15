@@ -69,7 +69,8 @@ which accompany the libfuse repo.
 `fusermount3` executable should be located at `build/util/fusermount3`. Add the
 `build/util` directory to `$PATH`. Furthermore, the `fusermount3` executable needs
 special privileges to run since it is does a `mount`. To give it these special
-privileges, use `sudo chmod root:root fusermount3; sudo chmod 4755 fusermount3`.
+privileges, use `sudo chown root:root ~/libfuse/build/util/fusermount3; sudo chmod 4755 ~/libfuse/build/util/fusermount3`.
+All of this can be bundled into a shell script. See `setup.sh` for an example.
 
 
 ## Building and Running the Stacked Filesystem ##
@@ -107,12 +108,28 @@ filesystem.
    To run the filesystem daemon with a single thread and in foreground mode, use: 
    `./StackFS_ll -r ~/fs/mountpoint ~/userspace_mountpoint -s -f`
 
-   This command will not return. To kill it, send an interrupt signal via `Ctrl-C`.
-   Right now this appears to cause a segfault in the signal handler, this may need
-   to be fixed. 
+   To use the logging capability:
+   `./StackFS_ll -r ~/fs/mountpoint ~/userspace_mountpoint -s -f --statsdir=/path/to/statsdir`
+   When the executable receives a signal to dump the statistics it collected, it will
+   dump the information to a file created in the statsdir. However, the executable
+   only dumps this information when it receives a `SIGUSR1` signal. See the Collecting
+   Runtime Statistics section below for more information.
+
+   To do debugging:
+   `gdb --args ./StackFS_ll -r ~/underlying_filesystem/mountpoint ~/userspace_mountpoint -s -f --statsdir=/home/andrew/fuse-stackfs/StackFS_LowLevel/test_statsdir`
+
+   To do tracing:
+   `./StackFS_ll -r ~/underlying_filesystem/mountpoint ~/userspace_mountpoint -s -f --statsdir=/home/andrew/fuse-stackfs/StackFS_LowLevel/test_statsdir --tracing`
+   Unlike logging, tracing is more invasive. It heavily impacts the performance 
+   of StackFS. When tracing is enabled, whenever the StackFS receives a request
+   from the kernel/library, it will record that it receieved the request. The requests
+   get recorded in a file called `trace_stackfs.log` which is created in the
+   statsdir directory. 
+
+   When run in foreground mode, the executable will not return. Use `Ctrl+C` to kill the daemon. 
 
    **Once you have killed the daemon, it's necessary to run `fusermount3 -u ~/userspace_mountpoint` 
-   to unmount the userspace file system. This will cause all the content of the 
+   to unmount the userspace filesystem. This will cause all the content of the 
    userspace filesystem to be erased.**
 
 3. You can interact with the userspace filesystem normally:
@@ -120,17 +137,91 @@ filesystem.
    touch ~/userspace_mountpoint hello.txt
    echo "hello" > ~/userspace_mountpoint/hello.txt
    rm ~/userspace_mountpoint/hello.txt
+   mkdir ~/userspace_mountpoint/test_dir
+   ...
    ```
 
-4. ....TODO
+
+## Collecting Runtime Statistics ##
+
+As the user interacts with the filesystem governed by StackFS, StackFS records
+statistics about its performance. It will dump these statistics to a file when
+it receives a `SIGUSR1` signal. It always dumps the statistics to `user_stats.txt`,
+which is created in the `statsdir` passed to the executable.
+
+After interacting with the filesystem, you can get statistics about its performance
+by doing `kill -s SIGUSR1 <pid>`. This will cause the `user_stats.txt` file to
+be created (or overwritten, if it already existed) and the statistics to be dumped
+to this file.
+
+When you look at `user_stats.txt`, it will contain a big grid of numbers:
+```
+0 0 0 0 0 0 0 0 0 0 7 11 6 7 16 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 4 8 4 3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 2 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 1 1 4 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 3 1 6 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 1 4 1 7 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 3 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 1 3 0 1 1 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 1 2 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+```
+Each row in the grid corresponds to a particular operation passed from the kernel
+to the stacked filesystem. For example, when the user creates a directory in the
+userspace filesystem, a `FUSE_MKDIR` operation is passed to the StackFS daemon
+and the daemon processes it. See `fuse_opcode` in `fuse_kernel.h` for a list of
+all the opcodes that can be passed to the daemon.
+
+Each column in the grid corresponds to a time bucket. There are 33 columns (assume
+they are labeled 0-32) and the time bucket for column with label `i` is 
+$ [0 \text{ns}, 1 \text{ns}] $ when $ i = 0 $ and $ [2^i \text{ns}, 2^{i+1} - 1 \text{ns}] $
+when $ i > 0 $. The second to last bucket corresponds to, approximately, $ [4.2 s, 8.6 s] $. If
+the runtime exceeds $ 2^{33} \text{ns} $, then it falls into the catch all last 
+bucket.
+
+
+
 
 
 
 ## TODO ##
-
-- Need to study the logging mechanisms in the stacked filesystem. I have commented
-out the fuse_session_add_statsDir() stuff to get things building for now.
-
-- Need to figure out what the generate_time(), populate_time(), etc. are doing.
-
+- Figure out when and where performance logging happens and goes.
 - Upgrade to Linux 6.6 kernel.
+- Add error handling to main() in StackFS_LowLevel.c.
+- Comment out all the tracing when doing measurements!

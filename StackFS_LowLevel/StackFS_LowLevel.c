@@ -608,8 +608,7 @@ static void stackfs_ll_getattr(fuse_req_t req, fuse_ino_t ino,
 	(void) fi;
 	double attr_val;
 
-	//StackFS_trace("Getattr called on name : %s and inode : %llu",
-	//			lo_name(req, ino), lo_inode(req, ino)->ino);
+	StackFS_trace("Getattr called on name : %s and inode : %llu", lo_name(req, ino), lo_inode(req, ino)->ino);
 	attr_val = lo_attr_valid_time(req);
 	generate_start_time(req);
 	res = stat(lo_name(req, ino), &buf);
@@ -629,8 +628,7 @@ static void stackfs_ll_setattr(fuse_req_t req, fuse_ino_t ino,
 	struct stat buf;
 	double attr_val;
 
-	//StackFS_trace("Setattr called on name : %s and inode : %llu",
-	//			lo_name(req, ino), lo_inode(req, ino)->ino);
+	StackFS_trace("Setattr called on name : %s and inode : %llu", lo_name(req, ino), lo_inode(req, ino)->ino);
 	attr_val = lo_attr_valid_time(req);
 	generate_start_time(req);
 	if (to_set & FUSE_SET_ATTR_SIZE) {
@@ -675,8 +673,7 @@ static void stackfs_ll_create(fuse_req_t req, fuse_ino_t parent,
 	char *fullPath = NULL;
 	double attr_val;
 
-	//StackFS_trace("Create called on %s and parent ino : %llu",
-	//				name, lo_inode(req, parent)->ino);
+	StackFS_trace("Create called on %s and parent ino : %llu", name, lo_inode(req, parent)->ino);
 
 	fullPath = (char *)malloc(PATH_MAX);
 	construct_full_path(req, parent, fullPath, name);
@@ -738,7 +735,7 @@ static void stackfs_ll_create(fuse_req_t req, fuse_ino_t parent,
 		} else {
 			lo_inode->nlookup++;
 			e.ino = lo_inode->lo_ino;
-			//StackFS_trace("Create called, e.ino : %llu", e.ino);
+			StackFS_trace("Create called, e.ino : %llu", e.ino);
 			fi->fh = fd;
 			fuse_reply_create(req, &e, fi);
 		}
@@ -757,8 +754,7 @@ static void stackfs_ll_mkdir(fuse_req_t req, fuse_ino_t parent,
 	char *fullPath = NULL;
 	double attr_val;
 
-	//StackFS_trace("Mkdir called with name : %s, parent ino : %llu",
-	//				name, lo_inode(req, parent)->ino);
+	StackFS_trace("Mkdir called with name : %s, parent ino : %llu", name, lo_inode(req, parent)->ino);
 
 	fullPath = (char *)malloc(PATH_MAX);
 	construct_full_path(req, parent, fullPath, name);
@@ -841,9 +837,8 @@ static void stackfs_ll_open(fuse_req_t req, fuse_ino_t ino,
 	generate_end_time(req);
 	populate_time(req);
 
-	//StackFS_trace("Open called on name : %s and fuse inode : %llu kernel inode : %llu fd : %d",
-	//		lo_name(req, ino), get_higher_fuse_inode_no(req, ino), get_lower_fuse_inode_no(req, ino), fd);
-	//StackFS_trace("Open name : %s and inode : %llu", lo_name(req, ino), get_lower_fuse_inode_no(req, ino));
+	// StackFS_trace("Open called on name : %s and fuse inode : %llu kernel inode : %llu fd : %d", lo_name(req, ino), get_higher_fuse_inode_no(req, ino), get_lower_fuse_inode_no(req, ino), fd);
+	StackFS_trace("Open name : %s and inode : %llu", lo_name(req, ino), get_lower_fuse_inode_no(req, ino));
 
 	if (fd == -1)
 		return (void) fuse_reply_err(req, errno);
@@ -859,8 +854,7 @@ static void stackfs_ll_opendir(fuse_req_t req, fuse_ino_t ino,
 	DIR *dp;
 	struct lo_dirptr *d;
 
-	//StackFS_trace("Opendir called on name : %s and inode : %llu",
-	//			lo_name(req, ino), lo_inode(req, ino)->ino);
+	StackFS_trace("Opendir called on name : %s and inode : %llu", lo_name(req, ino), lo_inode(req, ino)->ino);
 
 	generate_start_time(req);
 	dp = opendir(lo_name(req, ino));
@@ -893,9 +887,7 @@ static void stackfs_ll_read(fuse_req_t req, fuse_ino_t ino, size_t size,
 	if (USE_SPLICE) {
 		struct fuse_bufvec buf = FUSE_BUFVEC_INIT(size);
 
-		//StackFS_trace("Splice Read name : %s, off : %lu, size : %zu",
-		//			lo_name(req, ino), offset, size);
-
+		// StackFS_trace("Splice Read name : %s, off : %lu, size : %zu", lo_name(req, ino), offset, size);
 		generate_start_time(req);
 		buf.buf[0].flags = FUSE_BUF_IS_FD | FUSE_BUF_FD_SEEK;
 		buf.buf[0].fd = fi->fh;
@@ -906,8 +898,7 @@ static void stackfs_ll_read(fuse_req_t req, fuse_ino_t ino, size_t size,
 	} else {
 		char *buf;
 
-		//StackFS_trace("Read on name : %s, Kernel inode : %llu, fuse inode : %llu, off : %lu, size : %zu",
-		//			lo_name(req, ino), get_lower_fuse_inode_no(req, ino), get_higher_fuse_inode_no(req, ino), offset, size);
+		// StackFS_trace("Read on name : %s, Kernel inode : %llu, fuse inode : %llu, off : %lu, size : %zu", lo_name(req, ino), get_lower_fuse_inode_no(req, ino), get_higher_fuse_inode_no(req, ino), offset, size);
 		buf = (char *)malloc(size);
 		generate_start_time(req);
 		//clock_gettime(CLOCK_MONOTONIC, &start);
@@ -938,8 +929,7 @@ static void stackfs_ll_readdir(fuse_req_t req, fuse_ino_t ino, size_t size,
 	int err;
 	(void) ino;
 
-	//StackFS_trace("Readdir called on name : %s and inode : %llu",
-	//			lo_name(req, ino), lo_inode(req, ino)->ino);
+	StackFS_trace("Readdir called on name : %s and inode : %llu", lo_name(req, ino), lo_inode(req, ino)->ino);
 	d = lo_dirptr(fi);
 	buf = malloc(size*sizeof(char));
 	if (!buf)
@@ -1011,8 +1001,7 @@ static void stackfs_ll_release(fuse_req_t req, fuse_ino_t ino,
 {
 	(void) ino;
 
-	//StackFS_trace("Release called on name : %s and inode : %llu fd : %d ",
-	//		lo_name(req, ino), lo_inode(req, ino)->ino, fi->fh);
+	StackFS_trace("Release called on name : %s and inode : %llu fd : %d ", lo_name(req, ino), lo_inode(req, ino)->ino, fi->fh);
 	generate_start_time(req);
 	close(fi->fh);
 	generate_end_time(req);
@@ -1027,8 +1016,7 @@ static void stackfs_ll_releasedir(fuse_req_t req, fuse_ino_t ino,
 	struct lo_dirptr *d;
 	(void) ino;
 
-	//StackFS_trace("Releasedir called on name : %s and inode : %llu",
-	//			lo_name(req, ino), lo_inode(req, ino)->ino);
+	StackFS_trace("Releasedir called on name : %s and inode : %llu", lo_name(req, ino), lo_inode(req, ino)->ino);
 	d = lo_dirptr(fi);
 	generate_start_time(req);
 	closedir(d->dp);
@@ -1044,8 +1032,7 @@ static void stackfs_ll_write(fuse_req_t req, fuse_ino_t ino, const char *buf,
 	int res;
 	(void) ino;
 
-	//StackFS_trace("Write name : %s, inode : %llu, off : %lu, size : %zu",
-	//		lo_name(req, ino), lo_inode(req, ino)->ino, off, size);
+	StackFS_trace("Write name : %s, inode : %llu, off : %lu, size : %zu", lo_name(req, ino), lo_inode(req, ino)->ino, off, size);
 	generate_start_time(req);
 	res = pwrite(fi->fh, buf, size, off);
 	generate_end_time(req);
@@ -1066,8 +1053,7 @@ static void stackfs_ll_write_buf(fuse_req_t req, fuse_ino_t ino,
 
 	struct fuse_bufvec dst = FUSE_BUFVEC_INIT(fuse_buf_size(buf));
 
-	//StackFS_trace("Splice Write_buf on name : %s, off : %lu, size : %zu",
-	//			lo_name(req, ino), off, buf->buf[0].size);
+	StackFS_trace("Splice Write_buf on name : %s, off : %lu, size : %zu", lo_name(req, ino), off, buf->buf[0].size);
 
 	generate_start_time(req);
 	dst.buf[0].flags = FUSE_BUF_IS_FD | FUSE_BUF_FD_SEEK;
@@ -1089,8 +1075,7 @@ static void stackfs_ll_unlink(fuse_req_t req, fuse_ino_t parent,
 	int res;
 	char *fullPath = NULL;
 
-	//StackFS_trace("Unlink called on name : %s, parent inode : %llu",
-	//				name, lo_inode(req, parent)->ino);
+	StackFS_trace("Unlink called on name : %s, parent inode : %llu", name, lo_inode(req, parent)->ino);
 	fullPath = (char *)malloc(PATH_MAX);
 	construct_full_path(req, parent, fullPath, name);
 	generate_start_time(req);
@@ -1112,8 +1097,7 @@ static void stackfs_ll_rmdir(fuse_req_t req, fuse_ino_t parent,
 	int res;
 	char *fullPath = NULL;
 
-	//StackFS_trace("rmdir called with name : %s, parent inode : %llu",
-	//				name, lo_inode(req, parent)->ino);
+	StackFS_trace("rmdir called with name : %s, parent inode : %llu", name, lo_inode(req, parent)->ino);
 	fullPath = (char *)malloc(PATH_MAX);
 	construct_full_path(req, parent, fullPath, name);
 	generate_start_time(req);
@@ -1149,8 +1133,7 @@ static void stackfs_ll_forget(fuse_req_t req, fuse_ino_t ino, uint64_t nlookup)
 	struct lo_inode *inode = lo_inode(req, ino);
 
 	generate_start_time(req);
-	//StackFS_trace("Forget name : %s, inode : %llu and lookup count : %llu",
-	//				inode->name, inode->ino, nlookup);
+	StackFS_trace("Forget name : %s, inode : %llu and lookup count : %llu", inode->name, inode->ino, nlookup);
 	forget_inode(req, inode, nlookup);
 	generate_end_time(req);
 	populate_time(req);
@@ -1167,14 +1150,13 @@ static void stackfs_ll_forget_multi(fuse_req_t req, size_t count,
 	uint64_t nlookup;
 
 	generate_start_time(req);
-	//StackFS_trace("Batch Forget count : %zu", count);
+	StackFS_trace("Batch Forget count : %zu", count);
 	for (i = 0; i < count; i++) {
 		ino = forgets[i].ino;
 		nlookup = forgets[i].nlookup;
 		inode = lo_inode(req, ino);
 
-		//StackFS_trace("Forget %zu name : %s, lookup count : %llu",
-		//				i, inode->name, nlookup);
+		StackFS_trace("Forget %zu name : %s, lookup count : %llu", i, inode->name, nlookup);
 		forget_inode(req, inode, nlookup);
 	}
 	generate_end_time(req);
@@ -1188,8 +1170,7 @@ static void stackfs_ll_flush(fuse_req_t req, fuse_ino_t ino,
 {
 	int err;
 
-	//StackFS_trace("Flush called on name : %s and inode : %llu",
-	//			lo_name(req, ino), lo_inode(req, ino)->ino);
+	StackFS_trace("Flush called on name : %s and inode : %llu", lo_name(req, ino), lo_inode(req, ino)->ino);
 	generate_start_time(req);
 	err = 0;
 	generate_end_time(req);
@@ -1203,8 +1184,7 @@ static void stackfs_ll_statfs(fuse_req_t req, fuse_ino_t ino)
 	struct statvfs buf;
 
 	if (ino) {
-		//StackFS_trace("Statfs called with name : %s, and inode : %llu",
-		//		lo_name(req, ino), lo_inode(req, ino)->ino);
+		StackFS_trace("Statfs called with name : %s, and inode : %llu", lo_name(req, ino), lo_inode(req, ino)->ino);
 		memset(&buf, 0, sizeof(buf));
 		generate_start_time(req);
 		res = statvfs(lo_name(req, ino), &buf);
@@ -1223,8 +1203,7 @@ static void stackfs_ll_fsync(fuse_req_t req, fuse_ino_t ino, int datasync,
 {
 	int res;
 
-	//StackFS_trace("Fsync on name : %s, inode : %llu, datasync : %d",
-	//	 lo_name(req, ino), lo_inode(req, ino)->ino, datasync);
+	StackFS_trace("Fsync on name : %s, inode : %llu, datasync : %d", lo_name(req, ino), lo_inode(req, ino)->ino, datasync);
 	generate_start_time(req);
 	if (datasync)
 		res = fdatasync(fi->fh);
@@ -1242,7 +1221,7 @@ static void stackfs_ll_getxattr(fuse_req_t req, fuse_ino_t ino,
 {
 	int res;
 
-	//StackFS_trace("Function Trace : Getxattr");
+	StackFS_trace("Function Trace : Getxattr");
 	if (size) {
 		char *value = (char *) malloc(size);
 
@@ -1434,7 +1413,13 @@ int main(int argc, char **argv)
 		printf("No tracing\n");
     }
 
-	printf("Single Threaded : %d\n", opts.singlethread);
+    if (opts.singlethread) {
+	    printf("In single threaded mode.\n");
+    }
+    else {
+        printf("In multithreaded mode.\n");
+    }
+        
 
 	if (res != -1) {
 		struct fuse_session *se = fuse_session_new(&args, &hello_ll_oper, sizeof(hello_ll_oper), lo);
@@ -1453,9 +1438,7 @@ int main(int argc, char **argv)
         }
 
 		fuse_remove_signal_handlers(se);
-
 		fuse_session_remove_statsDir(se);
-
 		fuse_session_destroy(se);
 
 		StackFS_trace("Function Trace : Unmount");
