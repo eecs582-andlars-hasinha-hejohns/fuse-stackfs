@@ -91,10 +91,12 @@ filesystem within a file, mount the filesystem somewhere, and use it as the unde
 filesystem. 
 
    To do this:
-   1. Create the file for the filesystem: `touch ~/fs/ext4_fs`
-   2. Format the file so it is an ext4 filesystem: `mke2fs -t ext4 ~/fs/ext4_fs 2048`
-   3. Mount the filesystem at some mountpoint: `sudo mount -t ext4 ~/fs/ext4_fs ~/fs/mountpoint`
-   4. Change the directory permissions: `sudo chmod -R 777 ~/fs/mountpoint/`
+   ```
+   touch ~/fs/ext4_fs
+   mke2fs -t ext4 ~/fs/ext4_fs 2048
+   sudo mount -t ext4 ~/fs/ext4_fs ~/fs/mountpoint
+   sudo chmod -R 777 ~/fs/mountpoint/
+   ```
 
    When you're done, clean up with:
    ```
@@ -237,7 +239,11 @@ not clear to me what the significance of the `congestion_threshold` file is.
 
 ## Running the Filebench Performance Tests ##
 1. Build Filebench from source (https://github.com/filebench/filebench) and install
-it using the steps detailed in the repo. 
+it using the steps detailed in the repo. Before building and installing, modify
+`FILEBENCH_NFILESETENTRIES` in `ipc.h` to be `1024 * 1024 * 10`. By default, filebench
+hardcodes the maximum number of files which can be created to be `1024 * 1024`.
+The largest test we run creates 4 million files, so this hardcoded maximum must be
+increased.
 2. 
 
 
