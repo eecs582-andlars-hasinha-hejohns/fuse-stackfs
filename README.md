@@ -106,20 +106,29 @@ filesystem.
 2. Now build the stacked filesystem binary and run the filesystem daemon.
 
    To run the filesystem daemon with a single thread and in foreground mode, use: 
+
    `./StackFS_ll -r ~/fs/mountpoint ~/userspace_mountpoint -s -f`
 
+
    To use the logging capability:
+
    `./StackFS_ll -r ~/fs/mountpoint ~/userspace_mountpoint -s -f --statsdir=/path/to/statsdir`
+
    When the executable receives a signal to dump the statistics it collected, it will
    dump the information to a file created in the statsdir. However, the executable
    only dumps this information when it receives a `SIGUSR1` signal. See the Collecting
    Runtime Statistics section below for more information.
 
+
    To do debugging:
+
    `gdb --args ./StackFS_ll -r ~/underlying_filesystem/mountpoint ~/userspace_mountpoint -s -f --statsdir=/home/andrew/fuse-stackfs/StackFS_LowLevel/test_statsdir`
 
+
    To do tracing:
+
    `./StackFS_ll -r ~/underlying_filesystem/mountpoint ~/userspace_mountpoint -s -f --statsdir=/home/andrew/fuse-stackfs/StackFS_LowLevel/test_statsdir --tracing`
+
    Unlike logging, tracing is more invasive. It heavily impacts the performance 
    of StackFS. When tracing is enabled, whenever the StackFS receives a request
    from the kernel/library, it will record that it receieved the request. The requests
@@ -129,8 +138,8 @@ filesystem.
    When run in foreground mode, the executable will not return. Use `Ctrl+C` to kill the daemon. 
 
    **Once you have killed the daemon, it's necessary to run `fusermount3 -u ~/userspace_mountpoint` 
-   to unmount the userspace filesystem. This will cause all the content of the 
-   userspace filesystem to be erased.**
+   to unmount the userspace filesystem. Doing this will only unmount the file system, the
+   content of the file system will stil be intact.**
 
 3. You can interact with the userspace filesystem normally:
    ```
@@ -206,7 +215,10 @@ Each row in the grid corresponds to a particular operation passed from the kerne
 to the stacked filesystem. For example, when the user creates a directory in the
 userspace filesystem, a `FUSE_MKDIR` operation is passed to the StackFS daemon
 and the daemon processes it. See `fuse_opcode` in `fuse_kernel.h` for a list of
-all the opcodes that can be passed to the daemon.
+all the opcodes that can be passed to the daemon. Note that the standard opcodes 
+in `fuse_kernel.h` are integers in the range `[1, 51]`. As such, the first row in
+the table correpsonds to `FUSE_LOOKUP`, the second row corresponds to `FUSE_FORGET`,
+etc.
 
 Each column in the grid corresponds to a time bucket. There are 33 columns (assume
 they are labeled 0-32) and the time bucket for column with label `i` is 
@@ -215,13 +227,24 @@ when $ i > 0 $. The second to last bucket corresponds to, approximately, $ [4.2 
 the runtime exceeds $ 2^{33} \text{ns} $, then it falls into the catch all last 
 bucket.
 
+## The `/sys/fs/fuse/connections/` Directory ##
+The `/sys/fs/fuse/connections/` directory contains one directory for each mounted 
+userspace filesystem. The directory names are minor devide numbers (use `stat` 
+to view the device number of a mounted userspace filesystem). Each subdirectory 
+contains 4 files which contain information about the FUSE queues in the kernel. It's
+not clear to me what the significance of the `congestion_threshold` file is.
 
+
+## Running the Filebench Performance Tests ##
+1. Build Filebench from source (https://github.com/filebench/filebench) and install
+it using the steps detailed in the repo. 
+2. 
 
 
 
 
 ## TODO ##
-- Figure out when and where performance logging happens and goes.
 - Upgrade to Linux 6.6 kernel.
 - Add error handling to main() in StackFS_LowLevel.c.
 - Comment out all the tracing when doing measurements!
+- Enable all the time keeping in libfuse (which is in addition to the time keeping the StackFS itself)? See the calls to clock_gettime().

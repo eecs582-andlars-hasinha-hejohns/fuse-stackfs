@@ -562,8 +562,7 @@ static void stackfs_ll_lookup(fuse_req_t req, fuse_ino_t parent,
 	char *fullPath = NULL;
 	double attr_val;
 
-	//StackFS_trace("Lookup called on name : %s, parent ino : %llu",
-	//							name, parent);
+	StackFS_trace("Lookup called on name : %s, parent ino : %llu", name, parent);
 	fullPath = (char *)malloc(PATH_MAX);
 	construct_full_path(req, parent, fullPath, name);
 
