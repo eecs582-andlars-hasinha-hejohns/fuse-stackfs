@@ -50,7 +50,8 @@ The packages included with the Debian v12.2 ('bookworm') package management syst
 
 However, we need customized versions of all of these components. See `Using Customized Libfuse`
 below for instructions on how to get our customized versions. *You don't need to
-install anything via apt*
+install any of the libfuse functionality via apt, we will use customized versions
+of libfuse instead.*
 
 Note: 
 Even though Libfuse, Fuse3, and Libfuse3-dev all come as separate installs
@@ -289,3 +290,8 @@ increased.
 - Add error handling to main() in StackFS_LowLevel.c.
 - Comment out all the tracing when doing measurements!
 - Enable all the time keeping in libfuse (which is in addition to the time keeping the StackFS itself)? See the calls to clock_gettime().
+- Consider aiowrite/aiowait flowops for additional filebench experiments.
+
+## Odd Things Noticed in *To FUSE or Not to FUSE: Performance of User-Space File Systems*##
+- In the file create workloads, they not only create the files but do write their
+entire content!
