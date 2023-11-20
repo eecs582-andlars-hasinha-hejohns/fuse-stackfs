@@ -43,10 +43,14 @@ System:
 - Debian v12.2
 - Linux Kernel v6.1.0-13-amd64
 
-Debian v12.2 comes with:
+The packages included with the Debian v12.2 ('bookworm') package management system are:
 - Libfuse v3.14.0-4, the shared library ("apt install libfuse3-3")
 - Fuse3 v3.14.0-4, fuse command line stuff ("apt install fuse3")
 - Libfuse3-dev v3.14.0-4, files for development ("apt install libfuse3-dev")
+
+However, we need customized versions of all of these components. See `Using Customized Libfuse`
+below for instructions on how to get our customized versions. *You don't need to
+install anything via apt*
 
 Note: 
 Even though Libfuse, Fuse3, and Libfuse3-dev all come as separate installs
@@ -62,14 +66,28 @@ and checkout the `with_instrumentation` branch.
 2. We'll now build libfuse as a shared object file so that it can be linked to
 create a StackFS binary executable. To do this, follow the build instructions which
 accompany the customized version of libfuse. At the time of writing this, you should
-`mkdir build; cd build; meson setup ..; ninja`. There is no need to run the tests
-which accompany the libfuse repo.
+do:
+
+```
+mkdir build 
+cd build
+meson setup .. 
+ninja
+```
+
+There is no need to run the tests which accompany the libfuse repo.
 3. Check that the `build/` directory you just created contains `/lib/libfuse3.so`.
 4. The StackFS binary executable needs access to the `fusermount3` executable. The
 `fusermount3` executable should be located at `build/util/fusermount3`. Add the
 `build/util` directory to `$PATH`. Furthermore, the `fusermount3` executable needs
-special privileges to run since it is does a `mount`. To give it these special
-privileges, use `sudo chown root:root ~/libfuse/build/util/fusermount3; sudo chmod 4755 ~/libfuse/build/util/fusermount3`.
+to run as root since it is does a `mount`. To make it run as root and allow other
+users to execute it, use: 
+
+```
+sudo chown root:root ~/libfuse/build/util/fusermount3
+sudo chmod 4755 ~/libfuse/build/util/fusermount3
+```
+
 All of this can be bundled into a shell script. See `setup.sh` for an example.
 
 
@@ -117,25 +135,25 @@ filesystem.
    `./StackFS_ll -r ~/fs/mountpoint ~/userspace_mountpoint -s -f --statsdir=/path/to/statsdir`
 
    When the executable receives a signal to dump the statistics it collected, it will
-   dump the information to a file created in the statsdir. However, the executable
+   dump the information to a file created in the `statsdir`. However, the executable
    only dumps this information when it receives a `SIGUSR1` signal. See the Collecting
    Runtime Statistics section below for more information.
 
 
    To do debugging:
 
-   `gdb --args ./StackFS_ll -r ~/underlying_filesystem/mountpoint ~/userspace_mountpoint -s -f --statsdir=/home/andrew/fuse-stackfs/StackFS_LowLevel/test_statsdir`
+   `gdb --args ./StackFS_ll -r ~/underlying_filesystem/mountpoint ~/userspace_mountpoint -s -f --statsdir=/path/to/statsdir`
 
 
    To do tracing:
 
-   `./StackFS_ll -r ~/underlying_filesystem/mountpoint ~/userspace_mountpoint -s -f --statsdir=/home/andrew/fuse-stackfs/StackFS_LowLevel/test_statsdir --tracing`
+   `./StackFS_ll -r ~/underlying_filesystem/mountpoint ~/userspace_mountpoint -s -f --statsdir=/path/to/statsdir --tracing`
 
    Unlike logging, tracing is more invasive. It heavily impacts the performance 
-   of StackFS. When tracing is enabled, whenever the StackFS receives a request
+   of StackFS. When tracing is enabled and the StackFS receives a request
    from the kernel/library, it will record that it receieved the request. The requests
    get recorded in a file called `trace_stackfs.log` which is created in the
-   statsdir directory. 
+   `statsdir` directory. 
 
    When run in foreground mode, the executable will not return. Use `Ctrl+C` to kill the daemon. 
 
@@ -151,6 +169,16 @@ filesystem.
    mkdir ~/userspace_mountpoint/test_dir
    ...
    ```
+
+   **For security reasons, the userspace filesystem is only accessible to the user 
+   who mounted the userspace filesystem. If you mount a userspace filesystem as 
+   root, you must be root to access any information about it. This applies even
+   if the directory in which the userspace filesystem lives was created by some
+   other user. For example, user `andrew` might create a directory `~/userspace_mountpoint`
+   and then user `root` might mount a userspace filesystem to this directory. If
+   user `andrew` then attempts to issue `ls ~/userspace_mountpoint`, they will
+   get a `Permission denied` error. Use `mount -l` to check which user mounted a 
+   userspace filesystem.**
 
 
 ## Collecting Runtime Statistics ##
@@ -224,14 +252,14 @@ etc.
 
 Each column in the grid corresponds to a time bucket. There are 33 columns (assume
 they are labeled 0-32) and the time bucket for column with label `i` is 
-$ [0 \text{ns}, 1 \text{ns}] $ when $ i = 0 $ and $ [2^i \text{ns}, 2^{i+1} - 1 \text{ns}] $
-when $ i > 0 $. The second to last bucket corresponds to, approximately, $ [4.2 s, 8.6 s] $. If
-the runtime exceeds $ 2^{33} \text{ns} $, then it falls into the catch all last 
+$[0 \text{ns}, 1 \text{ns}]$ when $i = 0$ and $[2^i \text{ns}, 2^{i+1} - 1 \text{ns}]$
+when $i > 0$. The second to last bucket corresponds to, approximately, $[4.2 \text{s}, 8.6 \text{s}]$. If
+the runtime exceeds $2^{33} \text{ns} = 8.6 \text{s}$, then it falls into the catch all last 
 bucket.
 
 ## The `/sys/fs/fuse/connections/` Directory ##
 The `/sys/fs/fuse/connections/` directory contains one directory for each mounted 
-userspace filesystem. The directory names are minor devide numbers (use `stat` 
+userspace filesystem. The directory names are minor device numbers (use `stat` 
 to view the device number of a mounted userspace filesystem). Each subdirectory 
 contains 4 files which contain information about the FUSE queues in the kernel. It's
 not clear to me what the significance of the `congestion_threshold` file is.
@@ -244,6 +272,14 @@ it using the steps detailed in the repo. Before building and installing, modify
 hardcodes the maximum number of files which can be created to be `1024 * 1024`.
 The largest test we run creates 4 million files, so this hardcoded maximum must be
 increased.
+
+**Warning: There is currently a bug in the Filebench implementation such that, for
+(relatively) new versions of the Linux kernel it is necessary to turn off virtual
+address space randomization. See https://github.com/filebench/filebench/issues/156.
+The upshot is that it's necessary to turn off virtual address space randomization
+via `sudo bash -c "echo 0 > /proc/sys/kernel/randomize_va_space"` before running
+any filebench test.**
+
 2. 
 
 
