@@ -68,14 +68,14 @@ create a StackFS binary executable. To do this, follow the build instructions wh
 accompany the customized version of libfuse. At the time of writing this, you should
 do:
 
-```
-mkdir build 
-cd build
-meson setup .. 
-ninja
-```
+   ```
+   mkdir build 
+   cd build
+   meson setup .. 
+   ninja
+   ```
 
-There is no need to run the tests which accompany the libfuse repo.
+   There is no need to run the tests which accompany the libfuse repo.
 3. Check that the `build/` directory you just created contains `/lib/libfuse3.so`.
 4. The StackFS binary executable needs access to the `fusermount3` executable. The
 `fusermount3` executable should be located at `build/util/fusermount3`. Add the
@@ -83,12 +83,12 @@ There is no need to run the tests which accompany the libfuse repo.
 to run as root since it is does a `mount`. To make it run as root and allow other
 users to execute it, use: 
 
-```
-sudo chown root:root ~/libfuse/build/util/fusermount3
-sudo chmod 4755 ~/libfuse/build/util/fusermount3
-```
+   ```
+   sudo chown root:root ~/libfuse/build/util/fusermount3
+   sudo chmod 4755 ~/libfuse/build/util/fusermount3
+   ```
 
-All of this can be bundled into a shell script. See `setup.sh` for an example.
+   All of this can be bundled into a shell script. See `setup.sh` for an example.
 
 
 ## Building and Running the Stacked Filesystem ##
@@ -169,7 +169,6 @@ filesystem.
    mkdir ~/userspace_mountpoint/test_dir
    ...
    ```
-
    **For security reasons, the userspace filesystem is only accessible to the user 
    who mounted the userspace filesystem. If you mount a userspace filesystem as 
    root, you must be root to access any information about it. This applies even
@@ -251,10 +250,10 @@ the table correpsonds to `FUSE_LOOKUP`, the second row corresponds to `FUSE_FORG
 etc.
 
 Each column in the grid corresponds to a time bucket. There are 33 columns (assume
-they are labeled 0-32) and the time bucket for column with label `i` is 
-$[0 \text{ns}, 1 \text{ns}]$ when $i = 0$ and $[2^i \text{ns}, 2^{i+1} - 1 \text{ns}]$
-when $i > 0$. The second to last bucket corresponds to, approximately, $[4.2 \text{s}, 8.6 \text{s}]$. If
-the runtime exceeds $2^{33} \text{ns} = 8.6 \text{s}$, then it falls into the catch all last 
+they are labeled `[0, 32]`) and the time bucket for column with label `i` is 
+$[0 \text{ ns}, 1 \text{ ns}]$ when $i = 0$ and $[2^i \text{ ns}, 2^{i+1} - 1 \text{ ns}]$
+when $i > 0$. The second to last bucket corresponds to, approximately, $[4.2 \text{ s}, 8.6 \text{ s}]$. If
+the runtime exceeds $2^{33} \text{ ns} = 8.6 \text{ s}$, then it falls into the catch all last 
 bucket.
 
 ## The `/sys/fs/fuse/connections/` Directory ##
@@ -266,21 +265,21 @@ not clear to me what the significance of the `congestion_threshold` file is.
 
 
 ## Running the Filebench Performance Tests ##
-1. Build Filebench from source (https://github.com/filebench/filebench) and install
+1. Build Filebench 1.5-alpha3 from source (https://github.com/filebench/filebench) and install
 it using the steps detailed in the repo. Before building and installing, modify
 `FILEBENCH_NFILESETENTRIES` in `ipc.h` to be `1024 * 1024 * 10`. By default, filebench
 hardcodes the maximum number of files which can be created to be `1024 * 1024`.
 The largest test we run creates 4 million files, so this hardcoded maximum must be
 increased.
 
-**Warning: There is currently a bug in the Filebench implementation such that, for
-(relatively) new versions of the Linux kernel it is necessary to turn off virtual
-address space randomization. See https://github.com/filebench/filebench/issues/156.
-The upshot is that it's necessary to turn off virtual address space randomization
-via `sudo bash -c "echo 0 > /proc/sys/kernel/randomize_va_space"` before running
-any filebench test.**
+   **Warning: There is currently a bug in the Filebench implementation such that, for
+   (relatively) new versions of the Linux kernel it is necessary to turn off virtual
+   address space randomization. See https://github.com/filebench/filebench/issues/156.
+   The upshot is that it's necessary to turn off virtual address space randomization
+   via `sudo bash -c "echo 0 > /proc/sys/kernel/randomize_va_space"` before running
+   any filebench test.**
 
-2. 
+2.  
 
 
 
