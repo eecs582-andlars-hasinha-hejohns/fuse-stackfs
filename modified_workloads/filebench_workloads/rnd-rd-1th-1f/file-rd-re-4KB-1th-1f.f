@@ -1,4 +1,4 @@
-set $dir=
+set $dir=/home/andrew/userspace_mountpoint
 
 set mode quit alldone
 set $nfiles=1
@@ -6,7 +6,7 @@ set $nthreads=1
 set $memsize=4k
 set $iterations=262144
 
-define file name=bigfileset, path=$dir, size=60g, prealloc
+define file name=bigfileset, path=$dir, size=10m, prealloc
 
 define process name=fileopen, instances=1
 {

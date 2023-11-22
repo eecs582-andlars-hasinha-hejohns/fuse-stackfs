@@ -50,8 +50,8 @@ The packages included with the Debian v12.2 ('bookworm') package management syst
 
 However, we need customized versions of all of these components. See `Using Customized Libfuse`
 below for instructions on how to get our customized versions. *You don't need to
-install any of the libfuse functionality via apt, we will use customized versions
-of libfuse instead.*
+install any of the libfuse functionality via apt, we will use a customized version
+of libfuse, and all the associated tools, instead.*
 
 Note: 
 Even though Libfuse, Fuse3, and Libfuse3-dev all come as separate installs
@@ -295,6 +295,6 @@ queues.
 - Consider aiowrite/aiowait flowops for additional filebench experiments.
 - Could we run tests with a different user space file system?
 
-## Odd Things Noticed in *To FUSE or Not to FUSE: Performance of User-Space File Systems*##
+## Odd Things Noticed in *To FUSE or Not to FUSE: Performance of User-Space File Systems* ##
 - In the file create workloads, they not only create the files but do write their
 entire content!

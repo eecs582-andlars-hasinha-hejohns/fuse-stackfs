@@ -1,3 +1,18 @@
+"""
+This file provides a CLI-based runner for executing filebench workloads on arbitrary
+   userspace filesystems and in-kernel filesystems.
+
+Beware, this file should be executed with superuser privleges and does some dangerous
+   stuff. In particular, it overwrites specific files, mounts and unmounts certain
+   filesystems, clears caches, etc.
+
+Right now, the functionality is not fully general. It is assumed that ext4 should
+   be used as the filesystem for the backing store and that the StackFS filesystem
+   will be used. To allow arbitrary userspace filesystems to be used, it should only 
+   be necessary to modify the start_userspace_fs() function.
+"""
+
+
 import os
 import math
 import argparse
@@ -5,7 +20,7 @@ import pprint
 from typing import Any
 import subprocess
 import time
-
+import tempfile
 
 
 # Uses the passed directory to determine the workload categories and workloads.
@@ -44,13 +59,15 @@ def print_workloads(workloads: dict[str, list[str]]) -> None:
         print("For category " + os.path.basename(key) + " we have the following workloads: ")
         print(workloads[key])
         print()
+    
+    return
 
 
 
 # Build the argument parser for this program.
 def build_argparser() -> argparse.ArgumentParser:
 
-    parser = argparse.ArgumentParser(description="Options for filebench tests.")
+    parser = argparse.ArgumentParser(description="ALL PATHS SHOULD BE ABSOLUTE.")
 
     parser.add_argument("backing_store", help="The storage in which the filesystem \
                         will live. This could be the path to a disk partition or \
@@ -60,29 +77,27 @@ def build_argparser() -> argparse.ArgumentParser:
     
     parser.add_argument("backing_store_mountpoint", help="The desired mountpoint \
                         for the filesystem which lives in the backing store. If \
-                        StackFS is not used, the filebench tests will always operate \
-                        on this directory. If StackFS is used, the filebench tests \
-                        operate on the mounted userspace filesystem (aka the stackfs_\
-                        mountpoint).", action='store')
+                        a userspace filesystem is not used, the filebench tests will always operate \
+                        on this directory. If a userspace filesystem is used, the filebench tests \
+                        operate on the mounted userspace filesystem.", action='store')
 
-    stackfs_group = parser.add_argument_group("stackfs")
+    stackfs_group = parser.add_argument_group("Userspace Filesystem")
 
-    stackfs_group.add_argument("--use_stackfs", help="Flag which indicates if the user \
-                               wants to use the StackFS userspace filesystem.", 
+    stackfs_group.add_argument("--use_userspace_fs", help="Flag which indicates if the user \
+                               wants to use the userspace filesystem.", 
                                required=False, action='store_true')
 
-    stackfs_group.add_argument("--stackfs_mountpoint", help="The mountpoint for the StackFS \
-                               userspace filesystem. Must be passed if the StackFS is to \
+    stackfs_group.add_argument("--userspace_fs_mountpoint", help="The mountpoint for the \
+                               userspace filesystem. Must be passed if the userspace filesystem is to \
                                be used.", required=False, action='store')
 
-    stackfs_group.add_argument("--stackfs_binary", help="The path to the StackFS binary. \
-                               Must be passed if the StackFS is to be used.", 
+    stackfs_group.add_argument("--userspace_fs_binary", help="Path to the userspace filesystem daemon binary. \
+                               Must be passed if the userspace filesystem is to be used.", 
                                required=False, action='store')
 
-    stackfs_group.add_argument("--stackfs_opt", help="Flag indicating if the optimized version of \
-                               the StackFS userspace filesystem should be used or not. Does \
-                               not do anything if stackfs is not used.",
-                               required=False, default=False, action='store_true')
+    stackfs_group.add_argument("--userspace_fs_opt", help="Flag indicating if the optimized version of \
+                               the userspace filesystem should be used or not.", required=False, 
+                               default=False, action='store_true')
 
     filebench_group = parser.add_mutually_exclusive_group(required=True)
 
@@ -91,14 +106,15 @@ def build_argparser() -> argparse.ArgumentParser:
                                  directory in the filebench_workloads directory.", 
                                  action='store')
 
-    filebench_group.add_argument("--filebench_test", help="A particular filebench test to \
-                                 run. Should be the path to a .f file.", action='store')
+    filebench_group.add_argument("--filebench_test", help="Path to .f file. A \
+                                 particular filebench test to run.", action='store')
 
-    parser.add_argument("--modified_glibc", help="Location of the .so file containing \
+    parser.add_argument("--modified_glibc", help="Path to the .so file containing \
                         the modified glibc. If this argument is specified, the filebench \
                         executable is linked against this modifed glibc. If this argument \
-                        is not specified, the system glibc is used.", required=False,
-                        action='store')
+                        is not specified, the system glibc is used. Note that you can \
+                        choose to use a modified glibc without using a userspace filesystem.",
+                        required=False, action='store')
 
     parser.add_argument("stats_dir", help="Directory in which the statistics produced \
                         by the filebench tests should be dumped.", action='store')
@@ -114,14 +130,14 @@ def sanity_check_args(args: dict[str, Any]) -> None:
     if not os.path.exists(args["backing_store_mountpoint"]):
         raise AssertionError("Bad path to backing store mountpoint.")
 
-    if args["use_stackfs"]:
-        if (args["stackfs_mountpoint"] is None) or (args["stackfs_binary"] is None):
-            raise AssertionError("When using StackFS, you need to specify a mountpoint \
-                                 and the binary.")
-        if not os.path.exists(args["stackfs_mountpoint"]):
-            raise AssertionError("That StackFS mountpoint does not exist!")
-        if not os.path.exists(args["stackfs_binary"]):
-            raise AssertionError("That StackFS binary does not exist!")
+    if args["use_userspace_fs"]:
+        if (args["userspace_fs_mountpoint"] is None) or (args["userspace_fs_binary"] is None):
+            raise AssertionError("When using a userspace filesystem, you need to \
+                                 specify a mountpoint and the binary.")
+        if not os.path.exists(args["userspace_fs_mountpoint"]):
+            raise AssertionError("That userspace mountpoint does not exist!")
+        if not os.path.exists(args["userspace_fs_binary"]):
+            raise AssertionError("That userspace daemon binary does not exist!")
 
     if args["filebench_category"] is not None:
         FILEBENCH_WORKLOAD_DIR_NAME = "filebench_workloads"
@@ -141,20 +157,22 @@ def sanity_check_args(args: dict[str, Any]) -> None:
     if not os.path.exists(args["stats_dir"]):
         raise AssertionError("The statistics directory does not exist!")
 
-    return 0
+    return
 
 
 
 # Reformat a backing store.
 # The argument size is in units of kilobytes.
 # Using the same settings as the "To FUSE or Not to FUSE" paper.
-def reformat_backing_store(store: str, size: int=5000) -> None:
+def reformat_backing_store(store: str, size: int=20000) -> None:
 
     subprocess.run(["rm", "-rf", store])
     subprocess.run(["touch", store])
     subprocess.run(["mke2fs", "-F", "-q", "-E", "lazy_itable_init=0,lazy_journal_init=0", 
                     "-t" ,"ext4", store, str(size)], check=True, stdout=subprocess.DEVNULL)
     print("Finished formatting the storage device located at " + store + " with size " + str(size) + " KB.\n")
+    
+    return
 
 
 
@@ -162,7 +180,10 @@ def reformat_backing_store(store: str, size: int=5000) -> None:
 def unmount_fs(mountpoint: str) -> None:
 
     subprocess.run(["sudo", "umount", mountpoint], check=True, stdout=subprocess.DEVNULL)
+
     print("Unmounted the mountpoint " + mountpoint + ".\n")
+
+    return
 
 
 
@@ -174,53 +195,86 @@ def mount_fs(mountpoint: str, backing_store: str) -> None:
     # Allow all users to access this mounted filesystem.
     subprocess.run(["sudo", "chmod", "-R", "777", mountpoint], check=True, stdout=subprocess.DEVNULL)
 
-    print("Mounted the filesystem with backing store " + backing_store + " at mountpoint " + mountpoint + ".\n")
+    print("Mounted the filesystem with backing store " + backing_store + " at mountpoint " + mountpoint + "\n")
+
+    return
 
 
 
-# Do miscellaneous stuff like flushing caches, etc. before every filebench test.
+# Do miscellaneous stuff like flushing caches, etc. right before a filebench
+#    test. This function should be called right before starting a test. 
 def prepare_for_test() -> None:
 
     subprocess.run(["sync"], check=True)
+
+    with open("/proc/sys/kernel/randomize_va_space", "r+") as f:
+        if int(f.read(1)) != 0:
+            print("It was detected that you have virtual address space randomization turned on. This \
+                  generally causes the Filebench executable to be non-functioning.")
+            subprocess.run(["echo", "0"], stdout=outfile, check=True)
+            print("Virtual address space randomization was just turned off.")
 
     with open("/proc/sys/vm/drop_caches", "w") as outfile:
         subprocess.run(["echo", "3"], stdout=outfile, check=True)
 
     print("Finished preparing for tests.\n")
 
-
-
-# Start the userspace filesystem daemon and mount the userspace filesystem to
-#    somewhere.
-def start_userspace_fs(underlying_fs_mountpoint: str, userspace_fs_mountpoint: str, opt: bool) -> None:
     return
+
+
+
+# Start the userspace filesystem daemon and mount the userspace filesystem somewhere.
+# Returns a Popen object for the group of processes started.
+def start_userspace_fs(userspace_fs_binary: str, underlying_fs_mountpoint: str, 
+                       userspace_fs_mountpoint: str, opt: bool) -> int:
+
+    if not opt:
+        # Note that this is non-blocking and starts two processes. The processes
+        #    both live in a process group.
+        proc = subprocess.Popen([userspace_fs_binary, "-r", underlying_fs_mountpoint, 
+                                 userspace_fs_mountpoint, "-s", "-f"], stdout=subprocess.DEVNULL,
+                                 process_group=0)
+    else:
+        raise AssertionError("Optimizations not currently supported!")
+
+    print("Started the userspace filesystem daemon and mounted it to " + userspace_fs_mountpoint + "\n")
+
+    return proc
 
 
 
 # Kill the userspace filesystem daemon and unmount the userspace filesystem.
-def teardown_userspace_fs(fs_daemon_pid: int, userspace_fs_mountpoint: str) -> None:
+def teardown_userspace_fs(popen: subprocess.Popen, userspace_fs_mountpoint: str) -> None:
+
+    popen.kill()
+
+    subprocess.run(["fusermount3", "-u", userspace_fs_mountpoint], stdout=subprocess.DEVNULL, check=True)
+
+    print("Killed the userspace filesystem daemon.\n")
+
     return
 
 
 
-# Slightly hacky.
 # For a particular filebench workload (.f file), set the target directory on which
-#    the filebench workload will operate. This function modifies the content of 
-#    the .f file.
-def set_filebench_target_dir(file: str, target_dir: str) -> None:
+#    the filebench workload will operate.
+# This function creates a temporary copy of the filebench workload, modifies it 
+#    to set the target directory, and returns it. 
+def set_filebench_target_dir(file: str, target_dir: str) -> tempfile.NamedTemporaryFile:
 
-    # This is a bit hacky.
     # In the filebench workload file, it's necessary to specify the target directory
     #    for the filebench tests.
     # If you look at the top of every .f file in the filebench_workloads directory,
     #    you'll see that the first line is "$dir=". This means that the target
     #    directory is unspecified.
     # This function is responsible for replacing that first line so that the target
-    #    directory can be specified at runtime.
+    #    directory can be specified at runtime. But we don't want to modify the .f
+    #    file directly, so we instead copy it into a temporary file and use the
+    #    temporary file.
 
     all_file_lines = None 
     SPECIAL_FIRST_LINE = "set $dir="     
-    with open(file, "r+") as test_file:
+    with open(file, "r") as test_file:
 
         # Check that the first characters are as expected. 
         first_line = test_file.read(len(SPECIAL_FIRST_LINE))
@@ -234,17 +288,29 @@ def set_filebench_target_dir(file: str, target_dir: str) -> None:
         test_file.seek(0, 0)
         all_file_lines = test_file.readlines() 
 
-    with open(file, "w+") as test_file:
+    # Create a named temporary file which is a copy of the target file and lives in
+    #    the same directory as the target file.
+    # Note that this file is closed and deleted as soon as it is garbage collected.
+    temp = tempfile.NamedTemporaryFile(mode="w+", dir=os.path.dirname(file))
 
-        for line in all_file_lines:
-            if line == SPECIAL_FIRST_LINE + "\n":
-                new_first_line = SPECIAL_FIRST_LINE + target_dir + "\n"
-                test_file.write(new_first_line)
-            else:
-                test_file.write(line)
+    # Copy the content over to the new file and modify the first line.
+    for i, line in enumerate(all_file_lines):
+        if i == 0:
+            new_first_line = SPECIAL_FIRST_LINE + target_dir + "\n"
+            temp.write(new_first_line)
+        else:
+            temp.write(line)
+
+    # This temporary file is going to be used for a future filebench command.
+    # As such, it's necessary to make sure that it is not buffered in any way. 
+    temp.flush()
+    os.sync()
+
+    return temp
 
 
 
+# Run the filebench command synchronously. This may take a long time.
 def run_filebench_command(test: str, stats_dir: str, modified_glibc: str=None) -> None:
 
     stats_file_name = os.path.basename(test) + "_" + str(time.time())
@@ -256,26 +322,86 @@ def run_filebench_command(test: str, stats_dir: str, modified_glibc: str=None) -
     subprocess.run(["filebench", "-f", test], stdout=stats_file, check=True)
     print("Finished test " + test + "\n")
 
+    return
 
 
-# Run a single filebench test.
-# All arguments should be absolute paths to directories or files. 
-def run_test(test: str, backing_store: str, backing_store_mountpoint: str, 
-             stats_dir: str, modified_glibc: str=None) -> None:
 
-    # Set the directory on which the filebench test will operate. 
-    set_filebench_target_dir(test, backing_store_mountpoint)
+# Run a single filebench test. 
+# 
+# Notes:
+#    This function does a number of things which impact the filesystem. It mounts
+#       stuff, runs executables which create files, etc. When this function finishes
+#       running, its net effect should be a single file written to the statistics
+#       directory.
+#
+# Arguments:
+#    test                     - String.
+#                               Absolute path to a .f file.
+#    stats_dir                - String.
+#                               Absolute path to the directory where the statistics produced by
+#                                  the filebench test will be dumped.
+#    backing_store            - String.
+#                               Absolute path to a file or disk partition which will be used
+#                                 as the storage medium. This will be erased and reformatted
+#                                 before every test.
+#    backing_store_mountpoint - String.
+#                               Absolute path to the desired mountpoint of the
+#                                  backing store. The backing store will be mounted
+#                                  here.
+#    use_userspace_fs         - Boolean.
+#                               Should the userspace filesystem be used? If the userspace
+#                                  filesystem is not used, then the filebench workload will
+#                                  be run on the backing store.
+#
+# Optional Arguments:
+#    userspace_fs_mountpoint  - String.
+#                               Absolute path of desired mountpoint of the
+#                                  userspace filesystem. The userspace filesystem
+#                                  will be mounted to this location.
+#    userspace_fs_binary      - String.
+#                               Absolute path to the executable which runs the userspace
+#                                  filesystem daemon.
+#    userspace_fs_opt         - Boolean.
+#                               Should the optimized version of the userspace filesystem
+#                                  daemon be used? (This may not be useful for general userspace
+#                                  filesystems, but sure is relevant for StackFS)
+#    modified_glibc           - String.
+#                               Absolute path to a .so file representing a modified glibc.
+#                                  If this is passed, then the filebench executable will be
+#                                  linked against this modifed glibc.
+# 
+# Returns:
+#    None. 
+def run_test(test: str, stats_dir: str, backing_store: str, backing_store_mountpoint: str, 
+             use_userspace_fs: bool, userspace_fs_mountpoint: str=None, userspace_fs_binary: str=None, 
+             userspace_fs_opt: bool=False, modified_glibc: str=None) -> None: 
 
     # Reformat the underlying storage medium and mount it.
     reformat_backing_store(backing_store)
     mount_fs(backing_store_mountpoint, backing_store)
 
-    prepare_for_test() 
+    popen = None
+    if use_userspace_fs:
+        # If userspace_fs is being used, start the daemon, mount the userspace
+        #    filesystem, and point the Filebench workload at the mountpoint for
+        #    the userspace filesystem.
+        popen = start_userspace_fs(userspace_fs_binary, backing_store_mountpoint, userspace_fs_mountpoint, userspace_fs_opt)
+        temp = set_filebench_target_dir(test, userspace_fs_mountpoint)
+    else:
+        # If userspace_fs is not being used, the filebench workload will operate on the
+        #    in-kernel filesystem mounted at the backing store mountpoint.
+        temp = set_filebench_target_dir(test, backing_store_mountpoint)
 
-    run_filebench_command(test, stats_dir, modified_glibc)
+    prepare_for_test()
 
-    # Unmount the filesystem.
+    run_filebench_command(temp.name, stats_dir, modified_glibc)
+
+    if use_userspace_fs:
+        teardown_userspace_fs(popen, userspace_fs_mountpoint)
+    
     unmount_fs(backing_store_mountpoint)
+
+    return
 
 
 
@@ -287,9 +413,12 @@ if __name__ == "__main__":
     sanity_check_args(args)
 
     # Now switch on the passed arguments to do the stuff the user wants.
-    if (not args["use_stackfs"]) and (args["filebench_test"] is not None):
-        run_test(args["filebench_test"], args["backing_store"], args["backing_store_mountpoint"],
-                 args["stats_dir"])
+    if args["filebench_test"] is not None:
+
+        run_test(args["filebench_test"], args["stats_dir"], args["backing_store"], 
+                 args["backing_store_mountpoint"], args["use_userspace_fs"], 
+                 args["userspace_fs_mountpoint"], args["userspace_fs_binary"],
+                 args["userspace_fs_opt"], args["modified_glibc"])
+
     else:
         print("Can't handle that particular set of arguments right now...")
-
