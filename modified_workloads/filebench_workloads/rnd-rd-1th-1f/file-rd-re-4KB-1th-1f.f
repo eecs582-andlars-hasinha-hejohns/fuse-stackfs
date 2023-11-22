@@ -1,4 +1,4 @@
-set $dir=/home/andrew/userspace_mountpoint
+set $dir=
 
 set mode quit alldone
 set $nfiles=1

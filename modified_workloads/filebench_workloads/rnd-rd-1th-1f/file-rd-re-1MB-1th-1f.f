@@ -6,7 +6,7 @@ set $nthreads=1
 set $memsize=1m
 set $iterations=61440
 
-define file name=bigfileset, path=$dir, size=60g, prealloc
+define file name=bigfileset, path=$dir, size=10m, prealloc
 
 define process name=fileopen, instances=1
 {

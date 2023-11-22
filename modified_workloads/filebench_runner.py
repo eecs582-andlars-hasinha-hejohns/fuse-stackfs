@@ -23,10 +23,21 @@ import time
 import tempfile
 
 
+# Figure out the valid workload categories.
+# Makes assumptions about the relative position of this file with respect to the
+#    workload directory.
+def determine_workloads() -> dict[str, list[str]]:
+
+    FILEBENCH_WORKLOAD_DIR_NAME = "filebench_workloads"
+    filebench_workload_dir_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), FILEBENCH_WORKLOAD_DIR_NAME)
+    return find_workloads(filebench_workload_dir_path)
+
+
+
 # Uses the passed directory to determine the workload categories and workloads.
 #    Assumes that the directory contains directories which name the workload
 #    categories and the directories contain the workloads.
-def determine_workloads(dir: str) -> dict[str, list[str]]:
+def find_workloads(dir: str) -> dict[str, list[str]]:
 
     # A workload category is a name in the filebench_workloads directory.
     #    At the time of writing, categories include: "file-server", "files-cr", etc.
@@ -102,7 +113,7 @@ def build_argparser() -> argparse.ArgumentParser:
     filebench_group = parser.add_mutually_exclusive_group(required=True)
 
     filebench_group.add_argument("--filebench_category", help="The category of \
-                                 filebench tests to run. Should be the name of a \
+                                 filebench tests to run. Should be the path to a \
                                  directory in the filebench_workloads directory.", 
                                  action='store')
 
@@ -140,11 +151,9 @@ def sanity_check_args(args: dict[str, Any]) -> None:
             raise AssertionError("That userspace daemon binary does not exist!")
 
     if args["filebench_category"] is not None:
-        FILEBENCH_WORKLOAD_DIR_NAME = "filebench_workloads"
-        filebench_workload_dir_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), FILEBENCH_WORKLOAD_DIR_NAME)
-        workloads = determine_workloads(filebench_workload_dir_path)
-
+        workloads = determine_workloads()
         if args["filebench_category"] not in workloads:
+            print_workloads(workloads)
             raise AssertionError("That filebench category does not exist!") 
     elif args["filebench_test"] is not None:
         if not os.path.exists(args["filebench_test"]):
@@ -228,14 +237,15 @@ def prepare_for_test() -> None:
 def start_userspace_fs(userspace_fs_binary: str, underlying_fs_mountpoint: str, 
                        userspace_fs_mountpoint: str, opt: bool) -> int:
 
+    # Note that this is non-blocking and starts two processes. The processes
+    #    both live in a process group.
     if not opt:
-        # Note that this is non-blocking and starts two processes. The processes
-        #    both live in a process group.
         proc = subprocess.Popen([userspace_fs_binary, "-r", underlying_fs_mountpoint, 
                                  userspace_fs_mountpoint, "-s", "-f"], stdout=subprocess.DEVNULL,
                                  process_group=0)
     else:
-        raise AssertionError("Optimizations not currently supported!")
+        # Mimic the optimizations in the "To FUSE or Not to FUSE" Paper
+        raise AssertionError("Optimizations for userspace filesystem not currently supported.")
 
     print("Started the userspace filesystem daemon and mounted it to " + userspace_fs_mountpoint + "\n")
 
@@ -380,7 +390,6 @@ def run_test(test: str, stats_dir: str, backing_store: str, backing_store_mountp
     reformat_backing_store(backing_store)
     mount_fs(backing_store_mountpoint, backing_store)
 
-    popen = None
     if use_userspace_fs:
         # If userspace_fs is being used, start the daemon, mount the userspace
         #    filesystem, and point the Filebench workload at the mountpoint for
@@ -405,6 +414,18 @@ def run_test(test: str, stats_dir: str, backing_store: str, backing_store_mountp
 
 
 
+# Wrapper function for running consecutive tests.
+def run_tests(tests: list[str], stats_dir: str, backing_store: str, backing_store_mountpoint: str, 
+              use_userspace_fs: bool, userspace_fs_mountpoint: str=None, userspace_fs_binary: str=None, 
+              userspace_fs_opt: bool=False, modified_glibc: str=None) -> None: 
+
+    for test in tests:
+        run_test(test, stats_dir, backing_store, backing_store_mountpoint, 
+                 use_userspace_fs, userspace_fs_mountpoint, userspace_fs_binary, 
+                 userspace_fs_opt, modified_glibc)
+
+
+
 if __name__ == "__main__":
 
     # Parse and sanity check the passed arguments. 
@@ -412,13 +433,15 @@ if __name__ == "__main__":
     args = vars(parser.parse_args())
     sanity_check_args(args)
 
-    # Now switch on the passed arguments to do the stuff the user wants.
-    if args["filebench_test"] is not None:
-
-        run_test(args["filebench_test"], args["stats_dir"], args["backing_store"], 
-                 args["backing_store_mountpoint"], args["use_userspace_fs"], 
-                 args["userspace_fs_mountpoint"], args["userspace_fs_binary"],
-                 args["userspace_fs_opt"], args["modified_glibc"])
-
+    # The user can specify a single filebench test or a category of filebench tests.
+    if args["filebench_test"]:
+        tests = [args["filebench_test"]]
     else:
-        print("Can't handle that particular set of arguments right now...")
+        workloads = determine_workloads()
+        tests = workloads[args["filebench_category"]]
+
+    # Run all the workloads.
+    run_tests(tests, args["stats_dir"], args["backing_store"], 
+              args["backing_store_mountpoint"], args["use_userspace_fs"], 
+              args["userspace_fs_mountpoint"], args["userspace_fs_binary"],
+              args["userspace_fs_opt"], args["modified_glibc"])

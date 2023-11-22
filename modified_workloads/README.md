@@ -38,5 +38,4 @@ The target directory of each workload is set at runtime of the `filebench_runner
 If you want to run a filebench workload directly, fill in the `set $dir` line.
 
 ## TODO ##
-- Use temporary file instead of modifying workload file directly.
-
+- Support the same optimizations as the *To FUSE or Not to FUSE* paper.
