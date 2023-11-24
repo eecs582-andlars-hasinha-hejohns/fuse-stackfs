@@ -23,20 +23,26 @@ import time
 import tempfile
 
 
-# Figure out the valid workload categories.
-# Makes assumptions about the relative position of this file with respect to the
-#    workload directory.
-def determine_workloads() -> dict[str, list[str]]:
 
-    FILEBENCH_WORKLOAD_DIR_NAME = "filebench_workloads"
-    filebench_workload_dir_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), FILEBENCH_WORKLOAD_DIR_NAME)
-    return find_workloads(filebench_workload_dir_path)
+# Assumptions about name of directory containing the filebench workloads and the
+#    relative path of the workload directory with respect to this file.
+FILEBENCH_WORKLOAD_DIR_NAME = "filebench_workloads"
+filebench_workload_dir_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), FILEBENCH_WORKLOAD_DIR_NAME)
+
+
+
+# Given a category name, this function returns an absolute path to the category.
+def construct_category_path(filebench_category: str) -> str:
+
+    return os.path.join(filebench_workload_dir_path, filebench_category)
 
 
 
 # Uses the passed directory to determine the workload categories and workloads.
 #    Assumes that the directory contains directories which name the workload
 #    categories and the directories contain the workloads.
+# The returned dictionary has keys which are absolute paths to dictionary categories
+#    and values which are absolute paths to filebench workloads (.f files).
 def find_workloads(dir: str) -> dict[str, list[str]]:
 
     # A workload category is a name in the filebench_workloads directory.
@@ -57,7 +63,9 @@ def find_workloads(dir: str) -> dict[str, list[str]]:
             raise AssertionError("The directory should be 2-leveled.")
         else:
             assert(len(dirs) == 0)
-            workloads[root] = files
+            workloads[root] = []
+            for file in files:
+                workloads[root].append(os.path.join(root, file))
 
     return workloads  
 
@@ -113,8 +121,8 @@ def build_argparser() -> argparse.ArgumentParser:
     filebench_group = parser.add_mutually_exclusive_group(required=True)
 
     filebench_group.add_argument("--filebench_category", help="The category of \
-                                 filebench tests to run. Should be the path to a \
-                                 directory in the filebench_workloads directory.", 
+                                 filebench tests to run. Should be unqualified name of a \
+                                 subdirectory in the filebench_workloads directory.", 
                                  action='store')
 
     filebench_group.add_argument("--filebench_test", help="Path to .f file. A \
@@ -151,9 +159,8 @@ def sanity_check_args(args: dict[str, Any]) -> None:
             raise AssertionError("That userspace daemon binary does not exist!")
 
     if args["filebench_category"] is not None:
-        workloads = determine_workloads()
-        if args["filebench_category"] not in workloads:
-            print_workloads(workloads)
+        category_path = construct_category_path(args["filebench_category"])
+        if not os.path.exists(category_path):
             raise AssertionError("That filebench category does not exist!") 
     elif args["filebench_test"] is not None:
         if not os.path.exists(args["filebench_test"]):
@@ -321,16 +328,36 @@ def set_filebench_target_dir(file: str, target_dir: str) -> tempfile.NamedTempor
 
 
 # Run the filebench command synchronously. This may take a long time.
-def run_filebench_command(test: str, stats_dir: str, modified_glibc: str=None) -> None:
+#
+# Arguments:
+#    test_name    - String.
+#                   Absolute path to the filebench test to run. 
+#    desired_name - String.
+#                   The name of the filebench test. This could be different than
+#                      the name of the filbench test file. Hint: When creating a
+#                      temporary file, the name of the temporary file is odd and
+#                      uninformative. 
+#    stats_dir    - String.
+#                   Absolute path to the statistics directory where the results
+#                      of this filebench test will be dumped.
+#
+# Optional Arguments:
+#    modified_glibc - String.
+#                     Absolute path to the modified glibc shared object (.so) file
+#                        which will be linked against the filebench executable.
+#
+# Return:
+#    None.
+def run_filebench_command(test_name: str, desired_name: str, stats_dir: str, modified_glibc: str=None) -> None:
 
-    stats_file_name = os.path.basename(test) + "_" + str(time.time())
+    stats_file_name = os.path.basename(desired_name) + "_" + str(time.time())
     stats_file_path = os.path.join(stats_dir, stats_file_name)
     stats_file = open(stats_file_path, "x")
 
-    print("Starting test " + test + "\n")
+    print("Starting test " + desired_name + "\n")
     print("Writing the results of this test to " + stats_file_path + "\n")
-    subprocess.run(["filebench", "-f", test], stdout=stats_file, check=True)
-    print("Finished test " + test + "\n")
+    subprocess.run(["filebench", "-f", test_name], stdout=stats_file, check=True)
+    print("Finished test " + desired_name + "\n")
 
     return
 
@@ -403,7 +430,8 @@ def run_test(test: str, stats_dir: str, backing_store: str, backing_store_mountp
 
     prepare_for_test()
 
-    run_filebench_command(temp.name, stats_dir, modified_glibc)
+    desired_name = os.path.basename(test)
+    run_filebench_command(temp.name, desired_name, stats_dir, modified_glibc)
 
     if use_userspace_fs:
         teardown_userspace_fs(popen, userspace_fs_mountpoint)
@@ -419,10 +447,18 @@ def run_tests(tests: list[str], stats_dir: str, backing_store: str, backing_stor
               use_userspace_fs: bool, userspace_fs_mountpoint: str=None, userspace_fs_binary: str=None, 
               userspace_fs_opt: bool=False, modified_glibc: str=None) -> None: 
 
-    for test in tests:
+    for i, test in enumerate(tests):
+
+        print()
+        print("*******************************************************************")
+        print("Starting test " + str(i + 1) + " of " + str(len(tests)))
+        print()
+
         run_test(test, stats_dir, backing_store, backing_store_mountpoint, 
                  use_userspace_fs, userspace_fs_mountpoint, userspace_fs_binary, 
                  userspace_fs_opt, modified_glibc)
+
+        print("*******************************************************************")
 
 
 
@@ -437,8 +473,8 @@ if __name__ == "__main__":
     if args["filebench_test"]:
         tests = [args["filebench_test"]]
     else:
-        workloads = determine_workloads()
-        tests = workloads[args["filebench_category"]]
+        path_to_category = construct_category_path(args["filebench_category"]) 
+        tests = find_workloads(filebench_workload_dir_path)[path_to_category]
 
     # Run all the workloads.
     run_tests(tests, args["stats_dir"], args["backing_store"], 
