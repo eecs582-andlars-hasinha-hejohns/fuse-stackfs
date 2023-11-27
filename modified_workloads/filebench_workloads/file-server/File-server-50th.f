@@ -6,7 +6,7 @@ set $meandirwidth=20
 set $nthreads=50
 set $size1=128k
 
-define fileset name=bigfileset, path=$dir, size=$size1, entries=$nfiles, dirwidth=$meandirwidth, prealloc
+define fileset name=bigfileset, path=$dir, size=$size1, entries=$nfiles, dirwidth=$meandirwidth, prealloc=80
 
 define process name=fileserver,instances=1
 {
@@ -27,4 +27,4 @@ define process name=fileserver,instances=1
     }
 }
 
-run
+psrun 10

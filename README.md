@@ -290,11 +290,11 @@ increased.
 - Add error handling to main() in StackFS_LowLevel.c.
 - Comment out all the tracing when doing measurements!
 - Enable all the time keeping in libfuse (which is in addition to the time keeping the StackFS itself)? See the calls to clock_gettime().
-- Consider adding the tracepoints to the Linux kernel to monitor the kernel-resident
-queues.
-- Consider aiowrite/aiowait flowops for additional filebench experiments.
-- Could we run tests with a different user space file system?
 
 ## Odd Things Noticed in *To FUSE or Not to FUSE: Performance of User-Space File Systems* ##
 - In the file create workloads, they not only create the files but do write their
 entire content!
+
+## Possible Extensions **
+- Consider aiowrite/aiowait flowops for additional filebench experiments.
+- Could we run tests with a different user space file system?

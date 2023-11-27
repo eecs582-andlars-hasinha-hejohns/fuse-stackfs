@@ -16,8 +16,8 @@ define process name=fileopen, instances=1
         flowop openfile name=open1, filesetname=bigfileset, fd=1
         flowop write name=write-file, filesetname=bigfileset, random, iosize=$memsize, iters=$iterations, fd=1
         flowop closefile name=close1, fd=1
-        flowop finishoncount name=finish, value=1
+        flowop finishoncount name=finish, value=1, target=close1
     }
 }
 
-run
+psrun 10

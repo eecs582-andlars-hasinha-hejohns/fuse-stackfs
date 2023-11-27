@@ -15,7 +15,7 @@ define process name=filesequentialwrite, instances=1
         flowop createfile name=create1, filesetname=bigfileset, fd=1, indexed=1
         flowop write name=write-file1, filesetname=bigfileset, iosize=$io_size,iters=$iterations, fd=1, indexed=1
         flowop closefile name=close1, fd=1, indexed=1
-        flowop finishoncount name=finish, value=1
+        flowop finishoncount name=finish, value=1, target=close1
     }
     
     thread name=filewriter, memsize=$io_size, instances=$nthreads
@@ -23,7 +23,7 @@ define process name=filesequentialwrite, instances=1
         flowop createfile name=create2, filesetname=bigfileset, fd=1, indexed=2
         flowop write name=write-file2, filesetname=bigfileset, iosize=$io_size,iters=$iterations, fd=1, indexed=2
         flowop closefile name=close2, fd=1, indexed=2
-        flowop finishoncount name=finish, value=1
+        flowop finishoncount name=finish, value=1, target=close2
     }
     
     thread name=filewriter, memsize=$io_size, instances=$nthreads
@@ -32,7 +32,7 @@ define process name=filesequentialwrite, instances=1
         flowop write name=write-file3, filesetname=bigfileset, iosize=$io_size,iters=$iterations, fd=1, indexed=3
         flowop closefile name=close3, fd=1, indexed=3
         flowop finishoncount name=finish, value=1
-    }
+    }, target=close3
 
     thread name=filewriter, memsize=$io_size, instances=$nthreads
     {
@@ -40,7 +40,7 @@ define process name=filesequentialwrite, instances=1
         flowop write name=write-file4, filesetname=bigfileset, iosize=$io_size,iters=$iterations, fd=1, indexed=4
         flowop closefile name=close4, fd=1, indexed=4
         flowop finishoncount name=finish, value=1
-    }
+    }, target=close4
 
     thread name=filewriter, memsize=$io_size, instances=$nthreads
     {
@@ -48,7 +48,7 @@ define process name=filesequentialwrite, instances=1
         flowop write name=write-file5, filesetname=bigfileset, iosize=$io_size,iters=$iterations, fd=1, indexed=5
         flowop closefile name=close5, fd=1, indexed=5
         flowop finishoncount name=finish, value=1
-    }
+    }, target=close5
     
     thread name=filewriter, memsize=$io_size, instances=$nthreads
     {
@@ -56,7 +56,7 @@ define process name=filesequentialwrite, instances=1
         flowop write name=write-file6, filesetname=bigfileset, iosize=$io_size,iters=$iterations, fd=1, indexed=6
         flowop closefile name=close6, fd=1, indexed=6
         flowop finishoncount name=finish, value=1
-    }
+    }, target=close6
     
     thread name=filewriter, memsize=$io_size, instances=$nthreads
     {
@@ -64,7 +64,7 @@ define process name=filesequentialwrite, instances=1
         flowop write name=write-file7, filesetname=bigfileset, iosize=$io_size,iters=$iterations, fd=1, indexed=7
         flowop closefile name=close7, fd=1, indexed=7
         flowop finishoncount name=finish, value=1
-    }
+    }, target=close7
 
     thread name=filewriter, memsize=$io_size, instances=$nthreads
     {
@@ -72,7 +72,7 @@ define process name=filesequentialwrite, instances=1
         flowop write name=write-file8, filesetname=bigfileset, iosize=$io_size,iters=$iterations, fd=1, indexed=8
         flowop closefile name=close8, fd=1, indexed=8
         flowop finishoncount name=finish, value=1
-    }
+    }, target=close8
 
     thread name=filewriter, memsize=$io_size, instances=$nthreads
     {
@@ -80,7 +80,7 @@ define process name=filesequentialwrite, instances=1
         flowop write name=write-file9, filesetname=bigfileset, iosize=$io_size,iters=$iterations, fd=1, indexed=9
         flowop closefile name=close9, fd=1, indexed=9
         flowop finishoncount name=finish, value=1
-    }
+    }, target=close9
 
     thread name=filewriter, memsize=$io_size, instances=$nthreads
     {
@@ -88,7 +88,7 @@ define process name=filesequentialwrite, instances=1
         flowop write name=write-file10, filesetname=bigfileset, iosize=$io_size,iters=$iterations, fd=1, indexed=10
         flowop closefile name=close10, fd=1, indexed=10
         flowop finishoncount name=finish, value=1
-    }
+    }, target=close10
 
     thread name=filewriter, memsize=$io_size, instances=$nthreads
     {
@@ -96,7 +96,7 @@ define process name=filesequentialwrite, instances=1
         flowop write name=write-file11, filesetname=bigfileset, iosize=$io_size,iters=$iterations, fd=1, indexed=11
         flowop closefile name=close11, fd=1, indexed=11
         flowop finishoncount name=finish, value=1
-    }
+    }, target=close11
 
     thread name=filewriter, memsize=$io_size, instances=$nthreads
     {
@@ -104,7 +104,7 @@ define process name=filesequentialwrite, instances=1
         flowop write name=write-file12, filesetname=bigfileset, iosize=$io_size,iters=$iterations, fd=1, indexed=12
         flowop closefile name=close12, fd=1, indexed=12
         flowop finishoncount name=finish, value=1
-    }
+    }, target=close12
 
     thread name=filewriter, memsize=$io_size, instances=$nthreads
     {
@@ -112,7 +112,7 @@ define process name=filesequentialwrite, instances=1
         flowop write name=write-file13, filesetname=bigfileset, iosize=$io_size,iters=$iterations, fd=1, indexed=13
         flowop closefile name=close13, fd=1, indexed=13
         flowop finishoncount name=finish, value=1
-    }
+    }, target=close13
 
     thread name=filewriter, memsize=$io_size, instances=$nthreads
     {
@@ -120,7 +120,7 @@ define process name=filesequentialwrite, instances=1
         flowop write name=write-file14, filesetname=bigfileset, iosize=$io_size,iters=$iterations, fd=1, indexed=14
         flowop closefile name=close14, fd=1, indexed=14
         flowop finishoncount name=finish, value=1
-    }
+    }, target=close14
 
     thread name=filewriter, memsize=$io_size, instances=$nthreads
     {
@@ -128,7 +128,7 @@ define process name=filesequentialwrite, instances=1
         flowop write name=write-file15, filesetname=bigfileset, iosize=$io_size,iters=$iterations, fd=1, indexed=15
         flowop closefile name=close15, fd=1, indexed=15
         flowop finishoncount name=finish, value=1
-    }
+    }, target=close15
 
     thread name=filewriter, memsize=$io_size, instances=$nthreads
     {
@@ -136,7 +136,7 @@ define process name=filesequentialwrite, instances=1
         flowop write name=write-file16, filesetname=bigfileset, iosize=$io_size,iters=$iterations, fd=1, indexed=16
         flowop closefile name=close16, fd=1, indexed=16
         flowop finishoncount name=finish, value=1
-    }
+    }, target=close16
 
     thread name=filewriter, memsize=$io_size, instances=$nthreads
     {
@@ -144,7 +144,7 @@ define process name=filesequentialwrite, instances=1
         flowop write name=write-file17, filesetname=bigfileset, iosize=$io_size,iters=$iterations, fd=1, indexed=17
         flowop closefile name=close17, fd=1, indexed=17
         flowop finishoncount name=finish, value=1
-    }
+    }, target=close17
 
     thread name=filewriter, memsize=$io_size, instances=$nthreads
     {
@@ -152,7 +152,7 @@ define process name=filesequentialwrite, instances=1
         flowop write name=write-file18, filesetname=bigfileset, iosize=$io_size,iters=$iterations, fd=1, indexed=18
         flowop closefile name=close18, fd=1, indexed=18
         flowop finishoncount name=finish, value=1
-    }
+    }, target=close18
 
     thread name=filewriter, memsize=$io_size, instances=$nthreads
     {
@@ -160,7 +160,7 @@ define process name=filesequentialwrite, instances=1
         flowop write name=write-file19, filesetname=bigfileset, iosize=$io_size,iters=$iterations, fd=1, indexed=19
         flowop closefile name=close19, fd=1, indexed=19
         flowop finishoncount name=finish, value=1
-    }
+    }, target=close19
 
     thread name=filewriter, memsize=$io_size, instances=$nthreads
     {
@@ -168,7 +168,7 @@ define process name=filesequentialwrite, instances=1
         flowop write name=write-file20, filesetname=bigfileset, iosize=$io_size,iters=$iterations, fd=1, indexed=20
         flowop closefile name=close20, fd=1, indexed=20
         flowop finishoncount name=finish, value=1
-    }
+    }, target=close20
     
     thread name=filewriter, memsize=$io_size, instances=$nthreads
     {
@@ -176,7 +176,7 @@ define process name=filesequentialwrite, instances=1
         flowop write name=write-file21, filesetname=bigfileset, iosize=$io_size,iters=$iterations, fd=1, indexed=21
         flowop closefile name=close21, fd=1, indexed=21
         flowop finishoncount name=finish, value=1
-    }
+    }, target=close21
 
     thread name=filewriter, memsize=$io_size, instances=$nthreads
     {
@@ -184,7 +184,7 @@ define process name=filesequentialwrite, instances=1
         flowop write name=write-file22, filesetname=bigfileset, iosize=$io_size,iters=$iterations, fd=1, indexed=22
         flowop closefile name=close22, fd=1, indexed=22
         flowop finishoncount name=finish, value=1
-    }
+    }, target=close22
 
     thread name=filewriter, memsize=$io_size, instances=$nthreads
     {
@@ -192,7 +192,7 @@ define process name=filesequentialwrite, instances=1
         flowop write name=write-file23, filesetname=bigfileset, iosize=$io_size,iters=$iterations, fd=1, indexed=23
         flowop closefile name=close23, fd=1, indexed=23
         flowop finishoncount name=finish, value=1
-    }
+    }, target=close23
 
     thread name=filewriter, memsize=$io_size, instances=$nthreads
     {
@@ -200,7 +200,7 @@ define process name=filesequentialwrite, instances=1
         flowop write name=write-file24, filesetname=bigfileset, iosize=$io_size,iters=$iterations, fd=1, indexed=24
         flowop closefile name=close24, fd=1, indexed=24
         flowop finishoncount name=finish, value=1
-    }
+    }, target=close24
 
     thread name=filewriter, memsize=$io_size, instances=$nthreads
     {
@@ -208,7 +208,7 @@ define process name=filesequentialwrite, instances=1
         flowop write name=write-file25, filesetname=bigfileset, iosize=$io_size,iters=$iterations, fd=1, indexed=25
         flowop closefile name=close25, fd=1, indexed=25
         flowop finishoncount name=finish, value=1
-    }
+    }, target=close25
 
     thread name=filewriter, memsize=$io_size, instances=$nthreads
     {
@@ -216,7 +216,7 @@ define process name=filesequentialwrite, instances=1
         flowop write name=write-file26, filesetname=bigfileset, iosize=$io_size,iters=$iterations, fd=1, indexed=26
         flowop closefile name=close26, fd=1, indexed=26
         flowop finishoncount name=finish, value=1
-    }
+    }, target=close26
 
     thread name=filewriter, memsize=$io_size, instances=$nthreads
     {
@@ -224,7 +224,7 @@ define process name=filesequentialwrite, instances=1
         flowop write name=write-file27, filesetname=bigfileset, iosize=$io_size,iters=$iterations, fd=1, indexed=27
         flowop closefile name=close27, fd=1, indexed=27
         flowop finishoncount name=finish, value=1
-    }
+    }, target=close27
 
     thread name=filewriter, memsize=$io_size, instances=$nthreads
     {
@@ -232,7 +232,7 @@ define process name=filesequentialwrite, instances=1
         flowop write name=write-file28, filesetname=bigfileset, iosize=$io_size,iters=$iterations, fd=1, indexed=28
         flowop closefile name=close28, fd=1, indexed=28
         flowop finishoncount name=finish, value=1
-    }
+    }, target=close28
 
     thread name=filewriter, memsize=$io_size, instances=$nthreads
     {
@@ -240,7 +240,7 @@ define process name=filesequentialwrite, instances=1
         flowop write name=write-file29, filesetname=bigfileset, iosize=$io_size,iters=$iterations, fd=1, indexed=29
         flowop closefile name=close29, fd=1, indexed=29
         flowop finishoncount name=finish, value=1
-    }
+    }, target=close29
 
     thread name=filewriter, memsize=$io_size, instances=$nthreads
     {
@@ -248,7 +248,7 @@ define process name=filesequentialwrite, instances=1
         flowop write name=write-file30, filesetname=bigfileset, iosize=$io_size,iters=$iterations, fd=1, indexed=30
         flowop closefile name=close30, fd=1, indexed=30
         flowop finishoncount name=finish, value=1
-    }
+    }, target=close30
 
     thread name=filewriter, memsize=$io_size, instances=$nthreads
     {
@@ -256,7 +256,7 @@ define process name=filesequentialwrite, instances=1
         flowop write name=write-file31, filesetname=bigfileset, iosize=$io_size,iters=$iterations, fd=1, indexed=31
         flowop closefile name=close31, fd=1, indexed=31
         flowop finishoncount name=finish, value=1
-    }
+    }, target=close31
 
     thread name=filewriter, memsize=$io_size, instances=$nthreads
     {
@@ -264,7 +264,7 @@ define process name=filesequentialwrite, instances=1
         flowop write name=write-file32, filesetname=bigfileset, iosize=$io_size,iters=$iterations, fd=1, indexed=32
         flowop closefile name=close32, fd=1, indexed=32
         flowop finishoncount name=finish, value=1
-    }
+    }, target=close32
 }
 
-run
+psrun 10

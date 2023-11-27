@@ -44,8 +44,8 @@ define process name=webserver,instances=1
         flowop readwholefile name=readfile10,fd=1,iosize=1m
         flowop closefile name=closefile10,fd=1
         flowop appendfilerand name=appendlog,filesetname=logfiles,iosize=16k,fd=2
-        flowop finishoncount name=finish, value=1000000
+        flowop finishoncount name=finish, value=1000000, target=closefile10
     }
 }
 
-run
+psrun 10

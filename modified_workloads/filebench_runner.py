@@ -180,7 +180,7 @@ def sanity_check_args(args: dict[str, Any]) -> None:
 # Reformat a backing store.
 # The argument size is in units of kilobytes.
 # Using the same settings as the "To FUSE or Not to FUSE" paper.
-def reformat_backing_store(store: str, size: int=20000) -> None:
+def reformat_backing_store(store: str, size: int=80000000) -> None:
 
     subprocess.run(["rm", "-rf", store])
     subprocess.run(["touch", store])
@@ -223,12 +223,10 @@ def prepare_for_test() -> None:
 
     subprocess.run(["sync"], check=True)
 
-    with open("/proc/sys/kernel/randomize_va_space", "r+") as f:
-        if int(f.read(1)) != 0:
-            print("It was detected that you have virtual address space randomization turned on. This \
-                  generally causes the Filebench executable to be non-functioning.")
-            subprocess.run(["echo", "0"], stdout=outfile, check=True)
-            print("Virtual address space randomization was just turned off.")
+    with open("/proc/sys/kernel/randomize_va_space", "r+") as outfile:
+        if outfile.read(1) != "0":
+            print("It was detected that you have virtual address space randomization turned on. This generally causes the Filebench executable to be non-functioning.")
+            raise AssertionError("Please turn virtual address space randomization off!!!")
 
     with open("/proc/sys/vm/drop_caches", "w") as outfile:
         subprocess.run(["echo", "3"], stdout=outfile, check=True)

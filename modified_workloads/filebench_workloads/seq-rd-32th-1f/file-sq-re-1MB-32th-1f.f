@@ -14,7 +14,7 @@ define process name=fileopen, instances=1
         flowop openfile name=open1, filesetname=bigfileset, fd=1
         flowop read name=read-file, filesetname=bigfileset, iosize=1m, iters=61440, fd=1
         flowop closefile name=close1, fd=1
-        flowop finishoncount name=finish, value=1
+        flowop finishoncount name=finish, value=1, target=close1
     }
 }
 

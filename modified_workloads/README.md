@@ -38,4 +38,4 @@ The target directory of each workload is set at runtime of the `filebench_runner
 If you want to run a filebench workload directly, fill in the `set $dir` line.
 
 ## TODO ##
-- Support the same optimizations as the *To FUSE or Not to FUSE* paper.
+- Add the same optimization capability as the *To FUSE or Not to FUSE* paper. 
