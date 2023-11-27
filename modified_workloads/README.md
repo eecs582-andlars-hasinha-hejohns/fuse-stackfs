@@ -13,6 +13,7 @@ you will need to unmount some directories before re-running the `filebench_runne
 script. If the `filebench_runner.py` does not break while executing, you don't need
 to do anything.
 
+### What to do if `filebench_runner.py` breaks. ###
 If the `filebench_runner.py` script breaks and you need to unmount directories:
 1. Run `mount -l` to see the list of all mounted directores on the system. If you
 notice that the backing store is mounted or the userspace filesystem is mounted,
@@ -20,10 +21,14 @@ you'll need to unmount them manually.
 2. To unmount the backing store manually, use `sudo umount /path/to/backing/store/mountpoint`.
 3. To unmount the userspace file system manually, use `sudo fusermount3 /path/to/userspace/fs/mountpoint`.
 
+### Assumptions that `filebench_runner.py` makes. ###
 The `filebench_runner.py` script assumes that `fusermount3` and `mke2fs` programs
 live on the `PATH` of the superuser. Beware that on many systems, for security reasons,
 the `PATH` for the superuser differs from that of other users. If this is the case,
 make sure that `fusermount3` and `mke2fs` are actually on the `PATH` of the superuser.
+
+### Filesystem Sizes ###
+The `filebench_runner.py` script hardcodes the size of the underlying filesystem. If you try to run a filebench test which uses a very large amount of memory (some tests use up to `60 GB`) and either the backing store runs out of space or the underlying filesystem runs out of space, you should anticipate seeing an error which says something like "Could not allocate file with name /bigfileset/0000001 ....".
 
 ## Running Filebench Workloads Directly ## 
 The filebench workloads only contain minimal workload specification. In particular,
