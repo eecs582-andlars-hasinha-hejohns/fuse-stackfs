@@ -180,7 +180,7 @@ def sanity_check_args(args: dict[str, Any]) -> None:
 # Reformat a backing store.
 # The argument size is in units of kilobytes.
 # Using the same settings as the "To FUSE or Not to FUSE" paper.
-def reformat_backing_store(store: str, size: int=80000000) -> None:
+def reformat_backing_store(store: str, size: int=60000000) -> None:
 
     subprocess.run(["rm", "-rf", store])
     subprocess.run(["touch", store])

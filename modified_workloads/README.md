@@ -38,10 +38,11 @@ you'll need to unmount them manually.
 3. To unmount the userspace file system manually, use `sudo fusermount3 /path/to/userspace/fs/mountpoint`.
 
 ### Assumptions that `filebench_runner.py` makes. ###
-The `filebench_runner.py` script assumes that `fusermount3` and `mke2fs` programs
-live on the `PATH` of the superuser. Beware that on many systems, for security reasons,
-the `PATH` for the superuser differs from that of other users. If this is the case,
-make sure that `fusermount3` and `mke2fs` are actually on the `PATH` of the superuser.
+The `filebench_runner.py` script assumes that the `fusermount3`, `mke2fs`, and 
+`filebench` programs live on the `PATH` of the superuser. Beware that on many 
+systems, for security reasons, the `PATH` for the superuser differs from that 
+of other users. If this is the case, make sure that `fusermount3`, `mke2fs`, `filebench`
+are actually on the `PATH` of the superuser.
 
 ### Filesystem Sizes ###
 The `filebench_runner.py` script hardcodes the size of the underlying filesystem. If you try to run a filebench test which uses a very large amount of memory (some tests use up to `60 GB`) and either the backing store runs out of space or the underlying filesystem runs out of space, you should anticipate seeing an error which says something like "Could not allocate file with name /bigfileset/0000001 ....".

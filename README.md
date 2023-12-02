@@ -269,8 +269,6 @@ not clear to me what the significance of the `congestion_threshold` file is.
 
 ## TODO ##
 - Upgrade to Linux 6.6 kernel.
-- Add error handling to main() in StackFS_LowLevel.c.
-- Comment out all the tracing when doing measurements!
 
 ## Odd Things Noticed in *To FUSE or Not to FUSE: Performance of User-Space File Systems* ##
 - In the file create workloads, they not only create the files but do write their
