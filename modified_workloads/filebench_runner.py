@@ -180,10 +180,8 @@ def sanity_check_args(args: dict[str, Any]) -> None:
 # Reformat a backing store.
 # The argument size is in units of kilobytes.
 # Using the same settings as the "To FUSE or Not to FUSE" paper.
-def reformat_backing_store(store: str, size: int=60000000) -> None:
+def reformat_backing_store(store: str, size: int=5000000) -> None:
 
-    subprocess.run(["rm", "-rf", store])
-    subprocess.run(["touch", store])
     subprocess.run(["mke2fs", "-F", "-q", "-E", "lazy_itable_init=0,lazy_journal_init=0", 
                     "-t" ,"ext4", store, str(size)], check=True, stdout=subprocess.DEVNULL)
     print("Finished formatting the storage device located at " + store + " with size " + str(size) + " KB.\n")
