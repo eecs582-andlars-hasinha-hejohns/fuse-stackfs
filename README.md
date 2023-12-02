@@ -44,9 +44,9 @@ System:
 - Linux Kernel v6.1.0-13-amd64
 
 The packages included with the Debian v12.2 ('bookworm') package management system are:
-- Libfuse v3.14.0-4, the shared library ("apt install libfuse3-3")
-- Fuse3 v3.14.0-4, fuse command line stuff ("apt install fuse3")
-- Libfuse3-dev v3.14.0-4, files for development ("apt install libfuse3-dev")
+- Libfuse v3.14.0-4, the shared library (if you wanted to install via apt, you would use "apt install libfuse3-3")
+- Fuse3 v3.14.0-4, fuse command line stuff (if you wanted to install via apt, you would use "apt install fuse3")
+- Libfuse3-dev v3.14.0-4, files for development (if you wanted to install via apt, you would use "apt install libfuse3-dev")
 
 However, we need customized versions of all of these components. See `Using Customized Libfuse`
 below for instructions on how to get our customized versions. *You don't need to
@@ -264,26 +264,8 @@ to view the device number of a mounted userspace filesystem). Each subdirectory
 contains 4 files which contain information about the FUSE queues in the kernel. It's
 not clear to me what the significance of the `congestion_threshold` file is.
 
-
 ## Running the Filebench Performance Tests ##
-1. Build Filebench 1.5-alpha3 from source (https://github.com/filebench/filebench) and install
-it using the steps detailed in the repo. Before building and installing, modify
-`FILEBENCH_NFILESETENTRIES` in `ipc.h` to be `1024 * 1024 * 10`. By default, filebench
-hardcodes the maximum number of files which can be created to be `1024 * 1024`.
-The largest test we run creates 4 million files, so this hardcoded maximum must be
-increased.
-
-   **Warning: There is currently a bug in the Filebench implementation such that, for
-   (relatively) new versions of the Linux kernel it is necessary to turn off virtual
-   address space randomization. See https://github.com/filebench/filebench/issues/156.
-   The upshot is that it's necessary to turn off virtual address space randomization
-   via `sudo bash -c "echo 0 > /proc/sys/kernel/randomize_va_space"` before running
-   any filebench test.**
-
-2.  
-
-
-
+- See `modified_workloads/README`
 
 ## TODO ##
 - Upgrade to Linux 6.6 kernel.

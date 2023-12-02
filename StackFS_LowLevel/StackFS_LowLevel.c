@@ -139,22 +139,20 @@ void StackFS_trace(const char *format, ...)
 	va_list ap;
 	int ret = 0;
 
-	/*lock*/
-	pthread_spin_lock(&spinlock);
-	if (logfile) {
+    if (logfile) {
+	    pthread_spin_lock(&spinlock);
 		/*Banner : time + pid + tid*/
 		ret = print_banner();
 		if (ret)
-			goto trace_out;
+	        pthread_spin_unlock(&spinlock);
+            return;
 		/*Done with banner*/
 		va_start(ap, format);
 		vfprintf(logfile, format, ap);
 		/*Done with trace*/
 		fprintf(logfile, "\n");
+	    pthread_spin_unlock(&spinlock);
 	}
-trace_out:
-	/*unlock*/
-	pthread_spin_unlock(&spinlock);
 }
 
 /*=============Hash Table implementation==========================*/
