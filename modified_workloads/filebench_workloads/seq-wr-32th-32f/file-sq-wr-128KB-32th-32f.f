@@ -267,4 +267,4 @@ define process name=filesequentialwrite, instances=1
     }, target=close32
 }
 
-psrun 10
+run

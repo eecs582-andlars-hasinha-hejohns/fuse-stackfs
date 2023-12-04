@@ -37,6 +37,15 @@ def construct_category_path(filebench_category: str) -> str:
     return os.path.join(filebench_workload_dir_path, filebench_category)
 
 
+# Returns a list containing absolute paths to all tests.
+def find_all_workloads():
+
+    all_tests = find_workloads(filebench_workload_dir_path)
+    tests = []
+    for category in all_tests:
+        tests.extend(all_tests[category])
+    return tests
+
 
 # Uses the passed directory to determine the workload categories and workloads.
 #    Assumes that the directory contains directories which name the workload
@@ -127,9 +136,21 @@ def build_argparser() -> argparse.ArgumentParser:
 
     filebench_group.add_argument("--filebench_test", help="Path to .f file. A \
                                  particular filebench test to run.", action='store')
+    
+    filebench_group.add_argument("--all_tests", help="Flag indicating that the user wants \
+                                  to run all filebench tests in all categories.", required=False,
+                                  default=False, action='store_true')
+
+    filebench_group.add_argument("--all_tests_from", help="Option to allow all tests after a particular \
+                                  test to run. This is useful if, for example, one \
+                                  test may have failed :( and you want to skip it.", required=False,
+                                  action='store')
 
     parser.add_argument("--modified_glibc", help="Path to the .so file containing \
-                        the modified glibc. If this argument is specified, the filebench \
+                        the modified glibc. This .so file does not need to contain a \
+                        whole glibc, it can contain a subset of the glibc functionality \
+                        that you wich to override. Linking is achieved with the LD_PRELOAD \
+                        trick. If this argument is specified, the filebench \
                         executable is linked against this modifed glibc. If this argument \
                         is not specified, the system glibc is used. Note that you can \
                         choose to use a modified glibc without using a userspace filesystem.",
@@ -180,7 +201,7 @@ def sanity_check_args(args: dict[str, Any]) -> None:
 # Reformat a backing store.
 # The argument size is in units of kilobytes.
 # Using the same settings as the "To FUSE or Not to FUSE" paper.
-def reformat_backing_store(store: str, size: int=5000000) -> None:
+def reformat_backing_store(store: str, size: int=70000000) -> None:
 
     subprocess.run(["mke2fs", "-F", "-q", "-E", "lazy_itable_init=0,lazy_journal_init=0", 
                     "-t" ,"ext4", store, str(size)], check=True, stdout=subprocess.DEVNULL)
@@ -352,7 +373,12 @@ def run_filebench_command(test_name: str, desired_name: str, stats_dir: str, mod
 
     print("Starting test " + desired_name + "\n")
     print("Writing the results of this test to " + stats_file_path + "\n")
-    subprocess.run(["filebench", "-f", test_name], stdout=stats_file, check=True)
+    if modified_glibc is None:
+        subprocess.run(["filebench", "-f", test_name], stdout=stats_file, check=True)
+    else:
+        os.putenv("LD_PRELOAD", modified_glibc)
+        subprocess.run(["filebench", "-f", test_name], stdout=stats_file, check=True)
+        os.unsetenv("LD_PRELOAD")
     print("Finished test " + desired_name + "\n")
 
     return
@@ -465,12 +491,19 @@ if __name__ == "__main__":
     args = vars(parser.parse_args())
     sanity_check_args(args)
 
-    # The user can specify a single filebench test or a category of filebench tests.
+    # The user may want to run a single test, a category of test, or all the tests.
     if args["filebench_test"]:
         tests = [args["filebench_test"]]
-    else:
+    elif args["filebench_category"]:
         path_to_category = construct_category_path(args["filebench_category"]) 
         tests = find_workloads(filebench_workload_dir_path)[path_to_category]
+    elif args["all_tests"]:
+        tests = find_all_workloads()
+    else:
+        tests = find_all_workloads()
+        target_test = args["all_tests_from"]
+        assert(target_test in tests)
+        tests = tests[tests.index(target_test) + 1:] 
 
     # Run all the workloads.
     run_tests(tests, args["stats_dir"], args["backing_store"], 

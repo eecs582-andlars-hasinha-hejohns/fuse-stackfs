@@ -18,4 +18,4 @@ define process name=fileopen, instances=1
     }
 }
 
-psrun 10
+run

@@ -48,4 +48,4 @@ define process name=webserver,instances=1
     }
 }
 
-psrun 10
+run

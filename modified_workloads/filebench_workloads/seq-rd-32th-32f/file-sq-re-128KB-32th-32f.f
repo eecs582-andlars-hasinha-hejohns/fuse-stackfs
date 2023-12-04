@@ -268,4 +268,4 @@ define process name=filereader,instances=1
     }
 }
 
-psrun 10
+run

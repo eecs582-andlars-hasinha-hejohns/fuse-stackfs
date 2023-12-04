@@ -27,4 +27,4 @@ define process name=fileserver,instances=1
     }
 }
 
-psrun 10
+run
