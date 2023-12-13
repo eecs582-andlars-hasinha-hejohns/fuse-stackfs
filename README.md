@@ -265,15 +265,5 @@ contains 4 files which contain information about the FUSE queues in the kernel. 
 not clear to me what the significance of the `congestion_threshold` file is.
 
 ## Running the Filebench Performance Tests ##
+## If you are an instructor of EECS 582, this is where the instructions for running the macrobenchmarks exist! ##
 - See `modified_workloads/README`
-
-## TODO ##
-- Upgrade to Linux 6.6 kernel.
-
-## Odd Things Noticed in *To FUSE or Not to FUSE: Performance of User-Space File Systems* ##
-- In the file create workloads, they not only create the files but do write their
-entire content!
-
-## Possible Extensions ##
-- Consider aiowrite/aiowait flowops for additional filebench experiments.
-- Could we run tests with a different user space file system?

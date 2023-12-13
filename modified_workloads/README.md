@@ -35,7 +35,7 @@ If the `filebench_runner.py` script breaks and you need to unmount directories:
 notice that the backing store is mounted or the userspace filesystem is mounted,
 you'll need to unmount them manually.
 2. To unmount the backing store manually, use `sudo umount /path/to/backing/store/mountpoint`.
-3. To unmount the userspace file system manually, use `sudo fusermount3 /path/to/userspace/fs/mountpoint`.
+3. To unmount the userspace file system manually, use `sudo fusermount3 -u /path/to/userspace/fs/mountpoint`.
 
 ### Assumptions that `filebench_runner.py` makes. ###
 The `filebench_runner.py` script assumes that the `fusermount3`, `mke2fs`, and 
@@ -58,6 +58,3 @@ script, will not work in general. This is because the `dir` variable is not defi
 in any of workload scripts. Notice that each script begins with the line `set $dir=`.
 The target directory of each workload is set at runtime of the `filebench_runner.py` script.
 If you want to run a filebench workload directly, fill in the `set $dir` line.
-
-## TODO ##
-- Add the same optimization capability as the *To FUSE or Not to FUSE* paper. 
