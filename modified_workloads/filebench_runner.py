@@ -29,6 +29,40 @@ import tempfile
 FILEBENCH_WORKLOAD_DIR_NAME = "filebench_workloads"
 filebench_workload_dir_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), FILEBENCH_WORKLOAD_DIR_NAME)
 
+CUSTOM_TEST_LIST0 = ["/home/andrew/fuse-stackfs/modified_workloads/filebench_workloads/file-server/File-server-50th.f",
+                     "/home/andrew/fuse-stackfs/modified_workloads/filebench_workloads/files-cr/file-cr-wr-4KB-1th-4Mf.f",
+                     "/home/andrew/fuse-stackfs/modified_workloads/filebench_workloads/files-rd/file-re-4KB-1th-1Mf.f",
+                     "/home/andrew/fuse-stackfs/modified_workloads/filebench_workloads/mail-server/Mail-server-16th.f",
+                     "/home/andrew/fuse-stackfs/modified_workloads/filebench_workloads/web-server/Web-server-100th.f",
+                     "/home/andrew/fuse-stackfs/modified_workloads/filebench_workloads/rnd-rd-1th-1f/file-rd-re-1MB-1th-1f.f",
+                     "/home/andrew/fuse-stackfs/modified_workloads/filebench_workloads/rnd-rd-1th-1f/file-rd-re-4KB-1th-1f.f",
+                     "/home/andrew/fuse-stackfs/modified_workloads/filebench_workloads/rnd-rd-32th-1f/file-rd-re-1MB-32th-1f.f",
+                     "/home/andrew/fuse-stackfs/modified_workloads/filebench_workloads/rnd-rd-32th-1f/file-rd-re-4KB-32th-1f.f",
+                     "/home/andrew/fuse-stackfs/modified_workloads/filebench_workloads/rnd-wr-1th-1f/file-rd-wr-1MB-1th-1f.f",
+                     "/home/andrew/fuse-stackfs/modified_workloads/filebench_workloads/rnd-wr-1th-1f/file-rd-wr-4KB-1th-1f.f",
+                     "/home/andrew/fuse-stackfs/modified_workloads/filebench_workloads/rnd-wr-32th-1f/file-rd-wr-1MB-32th-1f.f",
+                     "/home/andrew/fuse-stackfs/modified_workloads/filebench_workloads/rnd-wr-32th-1f/file-rd-wr-4KB-32th-1f.f",
+                     "/home/andrew/fuse-stackfs/modified_workloads/filebench_workloads/seq-rd-1th-1f/file-sq-re-1MB-1th-1f.f",
+                     "/home/andrew/fuse-stackfs/modified_workloads/filebench_workloads/seq-rd-1th-1f/file-sq-re-4KB-1th-1f.f",
+                     "/home/andrew/fuse-stackfs/modified_workloads/filebench_workloads/seq-rd-32th-1f/file-sq-re-1MB-32th-1f.f",
+                     "/home/andrew/fuse-stackfs/modified_workloads/filebench_workloads/seq-rd-32th-1f/file-sq-re-4KB-32th-1f.f",
+                     "/home/andrew/fuse-stackfs/modified_workloads/filebench_workloads/seq-rd-32th-32f/file-sq-re-1MB-32th-32f.f",
+                     "/home/andrew/fuse-stackfs/modified_workloads/filebench_workloads/seq-rd-32th-32f/file-sq-re-4KB-32th-32f.f",
+                     "/home/andrew/fuse-stackfs/modified_workloads/filebench_workloads/seq-wr-1th-1f/file-sq-wr-1MB-1th-1f.f",
+                     "/home/andrew/fuse-stackfs/modified_workloads/filebench_workloads/seq-wr-1th-1f/file-sq-wr-4KB-1th-1f.f",
+                     "/home/andrew/fuse-stackfs/modified_workloads/filebench_workloads/seq-wr-32th-32f/file-sq-wr-1MB-32th-32f.f",
+                     "/home/andrew/fuse-stackfs/modified_workloads/filebench_workloads/seq-wr-32th-32f/file-sq-wr-4KB-32th-32f.f",
+                     "/home/andrew/fuse-stackfs/modified_workloads/filebench_workloads/files-del/file-del-4KB-1th-2Mf.f",
+                    ] 
+
+CUSTOM_TEST_LIST1 = ["/home/andrew/fuse-stackfs/modified_workloads/filebench_workloads/file-server/File-server-50th.f",
+                     "/home/andrew/fuse-stackfs/modified_workloads/filebench_workloads/rnd-wr-1th-1f/file-rd-wr-1MB-1th-1f.f",
+                     "/home/andrew/fuse-stackfs/modified_workloads/filebench_workloads/seq-wr-1th-1f/file-sq-wr-4KB-1th-1f.f",                   
+                     "/home/andrew/fuse-stackfs/modified_workloads/filebench_workloads/rnd-rd-32th-1f/file-rd-re-4KB-32th-1f.f",
+                     "/home/andrew/fuse-stackfs/modified_workloads/filebench_workloads/mail-server/Mail-server-16th.f",
+                     "/home/andrew/fuse-stackfs/modified_workloads/filebench_workloads/files-del/file-del-4KB-1th-2Mf.f",
+                     "/home/andrew/fuse-stackfs/modified_workloads/filebench_workloads/seq-rd-32th-32f/file-sq-re-1MB-32th-32f.f"
+                    ]
 
 
 # Given a category name, this function returns an absolute path to the category.
@@ -145,6 +179,12 @@ def build_argparser() -> argparse.ArgumentParser:
                                   test to run. This is useful if, for example, one \
                                   test may have failed :( and you want to skip it.", required=False,
                                   action='store')
+
+    filebench_group.add_argument("--custom_tests0", help="Option to run a custom set of hardcoded tests.",
+                                 required=False, default=False, action='store_true')
+    
+    filebench_group.add_argument("--custom_tests1", help="Option to run a custom set of hardcoded tests.",
+                                 required=False, default=False, action='store_true')
 
     parser.add_argument("--modified_glibc", help="Path to the .so file containing \
                         the modified glibc. This .so file does not need to contain a \
@@ -499,11 +539,17 @@ if __name__ == "__main__":
         tests = find_workloads(filebench_workload_dir_path)[path_to_category]
     elif args["all_tests"]:
         tests = find_all_workloads()
-    else:
+    elif args["all_tests_from"]:
         tests = find_all_workloads()
         target_test = args["all_tests_from"]
         assert(target_test in tests)
         tests = tests[tests.index(target_test) + 1:] 
+    elif args["custom_tests0"]:
+        tests = CUSTOM_TEST_LIST0
+    elif args["custom_tests1"]:
+        tests = CUSTOM_TEST_LIST1
+    else:
+        raise AssertionError("Failure...")
 
     # Run all the workloads.
     run_tests(tests, args["stats_dir"], args["backing_store"], 
